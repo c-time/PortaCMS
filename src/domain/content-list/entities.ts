@@ -128,7 +128,10 @@ export const UIMetadataSchema = z.object({
 // Content item structure definition
 export const ContentItemStructureSchema = z.object({
   attributes : z.array(z.object({
-    id: z.string(), // Attribute ID
+    slug: z.string() // Attribute ID
+      .min(1, { message: "Slug is required" })
+      .max(100, { message: "Slug must not exceed 100 characters" })
+      .regex(/^[a-z0-9\-_]+$/, { message: "Slug must contain only lowercase letters, numbers, hyphens, and underscores" }),
     label: z.string(), // Display Label
     type : DataTypesSchema,
     uiMetadata: UIMetadataSchema,
@@ -149,7 +152,10 @@ export const ContentListViewStructureSchema = z.object({
     .optional(),
   fields: z.array(z.string().min(1)).min(1, { message: "At least one field must be selected for the view" }),
   virtualFields: z.array(z.object({
-    id: z.string().min(1),
+    slug: z.string() // Virtual field ID
+      .min(1, { message: "Slug is required" })
+      .max(100, { message: "Slug must not exceed 100 characters" })
+      .regex(/^[a-z0-9\-_]+$/, { message: "Slug must contain only lowercase letters, numbers, hyphens, and underscores" }),
     expression: z.string().min(1).describe("Expression to compute the virtual field's value with JSONata path syntax"),
     label: z.string().min(1),
   })).default([]),
