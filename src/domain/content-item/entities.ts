@@ -27,7 +27,28 @@ export const ContentItemSchema = z.object({
     message: "Status must be draft, published, or archived"
   }).default('draft'),
   slug: ContentItemSlugSchema,
-});
+}).refine(
+  (data) => {
+    // If both publishedAt and expiresAt are provided, expiresAt must be after publishedAt
+    if (data.publishedAt && data.expiresAt) {
+      return data.expiresAt > data.publishedAt;
+    }
+    return true; // Valid if either or both are missing
+  },
+  {
+    message: "expiresAt must be after publishedAt",
+    path: ["expiresAt"], // Error will be associated with the expiresAt field
+  }
+).refine(
+  (data) => {
+    // updatedAt should not be before createdAt
+    return data.updatedAt >= data.createdAt;
+  },
+  {
+    message: "updatedAt must be after or equal to createdAt",
+    path: ["updatedAt"],
+  }
+);
 
 export type ContentItemField = z.infer<typeof ContentItemFieldSchema>;
 export type ContentItem = z.infer<typeof ContentItemSchema>;
