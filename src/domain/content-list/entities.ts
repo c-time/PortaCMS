@@ -1,53 +1,6 @@
 import { z } from 'zod';
-import { SlugSchema } from '../shared/entities';
+import { CategorySlugSchema, FieldSlugSchema, ContentListSlugSchema } from '../shared/entities';
 
-/* {
-
-{
-  attributes : {
-    Name: {
-      type: "String"
-    }
-  }
-}
-
-TypeSchema = z.enum(["OneLineText", "MultiLineText", "R"])
-
-{
-  attributes : [
-    {
-      id : "name"
-      name: "Name",
-      description: "The name of a person",
-      type: "String"
-    }
-  ]
-}
-
-
-## String系
-一行テキスト
-複数行テキスト
-リッチエディタ
-記事エディタ
-
-## 日時
-
-## スイッチ(boolean)
-
-## 
-単一選択リスト
-複数選択リスト
-チェックボックス
-ラジオボタン
-
-
-ファイル
-画像
-}
-*/
-
-// Types
 
 // String
 export const StringTypeSchema = z.object({
@@ -128,15 +81,21 @@ export const UIMetadataSchema = z.object({
 
 // Content item structure definition
 export const ContentItemStructureSchema = z.object({
-  attributes : z.array(z.object({
-    slug: SlugSchema,
+  fields : z.array(z.object({
+    slug: FieldSlugSchema,
     label: z.string(), // Display Label
     schema : DataTypesSchema,
     uiMetadata: UIMetadataSchema,
   })),
 
+  virtualFields: z.array(z.object({
+    slug: FieldSlugSchema,
+    expression: z.string().min(1).describe("Expression to compute the virtual field's value with JSONata path syntax"),
+    label: z.string().min(1),
+  })).default([]),
+
   categories: z.array(z.object({
-    slug:  SlugSchema,
+    slug:  CategorySlugSchema,
     label: z.string(), // Display Label
   })).default([]),
 
@@ -193,7 +152,7 @@ export type ContentListStructure = z.infer<typeof ContentListStructureSchema>;
 
 // Content list entity
 export const ContentListSchema = z.object({
-  slug: SlugSchema,
+  slug: ContentListSlugSchema,
   name: z.string()
     .min(1, { message: "Content list name is required" })
     .max(100, { message: "Content list name must not exceed 100 characters" }),

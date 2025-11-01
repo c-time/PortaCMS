@@ -14,11 +14,6 @@ export const ContentItemFieldSchema = z.object({
 export const ContentItemSchema = z.object({
   id: ContentItemId,
   fields: z.array(ContentItemFieldSchema),
-  virtualFields: z.array(z.object({
-    slug: FieldSlugSchema,
-    expression: z.string().min(1).describe("Expression to compute the virtual field's value with JSONata path syntax"),
-    label: z.string().min(1),
-  })).default([]),
   publishedAt: z.date().optional(),
   expiresAt: z.date().optional(),
   createdAt: z.date(),
