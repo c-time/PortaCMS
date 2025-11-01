@@ -1,11 +1,11 @@
 import { z } from 'zod';
-import { ContentItemId } from '../ids';
+import { ContentItemId } from '../shared/ids';
 import { DataTypesSchema } from '../content-list/entities';
-import { SlugSchema } from '../shared/entities';
+import { FieldSlugSchema, ContentItemSlugSchema } from '../shared/entities';
 
 // Content item attribute definition
-export const ContentItemAttributeSchema = z.object({
-  slug: SlugSchema,
+export const ContentItemFieldSchema = z.object({
+  slug: FieldSlugSchema,
   value: z.string().array().default([]), // Supports multiple values
   schema: DataTypesSchema,
 });
@@ -13,9 +13,9 @@ export const ContentItemAttributeSchema = z.object({
 // Main content item entity
 export const ContentItemSchema = z.object({
   id: ContentItemId,
-  attributes: z.array(ContentItemAttributeSchema),
+  fields: z.array(ContentItemFieldSchema),
   virtualFields: z.array(z.object({
-    slug: SlugSchema,
+    slug: FieldSlugSchema,
     expression: z.string().min(1).describe("Expression to compute the virtual field's value with JSONata path syntax"),
     label: z.string().min(1),
   })).default([]),
@@ -31,8 +31,8 @@ export const ContentItemSchema = z.object({
   status: z.enum(['draft', 'published', 'archived'], {
     message: "Status must be draft, published, or archived"
   }).default('draft'),
-  slug: SlugSchema,
+  slug: ContentItemSlugSchema,
 });
 
-export type ContentItemProperty = z.infer<typeof ContentItemAttributeSchema>;
+export type ContentItemField = z.infer<typeof ContentItemFieldSchema>;
 export type ContentItem = z.infer<typeof ContentItemSchema>;

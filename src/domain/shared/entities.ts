@@ -5,9 +5,11 @@ const SlugSchema = z.string()
       .max(100, { message: "Slug must not exceed 100 characters" })
       .regex(/^[a-z0-9\-_]+$/, { message: "Slug must contain only lowercase letters, numbers, hyphens, and underscores" });
 
-export const AttributeSlugSchema = SlugSchema.brand('AttributeSlug');
+export const FieldSlugSchema = SlugSchema.brand('FieldSlug');
 
-export const AttributesSchema = z.record(AttributeSlugSchema, 
+export const ContentItemSlugSchema = SlugSchema.brand('ContentItemSlug');
+
+export const FieldSchema = z.record(FieldSlugSchema, 
     z.array(z.string())
     .or(z.string())
     .or(z.array(z.object({
@@ -30,7 +32,7 @@ export const PaginationContextSchema = z.object({
     //|◀ ◀  1 2 3 4 **5** 6 7 8 9 10 11 ▶ ▶|
     //|◀ ◀  3 / 100 ▶ ▶|
 
-    items: z.array(AttributesSchema).default([]),
+    items: z.array(FieldSchema).default([]),
     links : z.object({
       first: z.boolean().optional(),
       last: z.boolean().optional(),
