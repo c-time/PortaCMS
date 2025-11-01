@@ -24,13 +24,37 @@ export type CategorySlug = z.infer<typeof CategorySlugSchema>;
 export type ContentModelSlug = z.infer<typeof ContentModelSlugSchema>;
 export type ContentListViewSlug = z.infer<typeof ContentListViewSlugSchema>;
 
-export const FieldValueSchema = z.array(z.string())
-    .or(z.string())
-    .or(z.array(z.object({
-      label: z.string(),
-      slug: z.string(),
-      value: z.string(),
-    })));
+// Low-level base schemas for field values
+const StringValueSchema = z.string();
+const StringArrayValueSchema = z.array(z.string());
+const StructuredValueObjectSchema = z.object({
+  label: z.string(),
+  slug: z.string(),
+  value: z.string(),
+});
+const StructuredValueArraySchema = z.array(StructuredValueObjectSchema);
+
+// Keep the permissive union for backward compatibility
+export const FieldValueSchema = StringArrayValueSchema
+  .or(StringValueSchema)
+  .or(StructuredValueArraySchema);
+
+// Provide specific schemas for specific contexts
+export const PrimitiveFieldValueSchema = z.union([
+  StringValueSchema,
+  StringArrayValueSchema,
+]);
+
+export const StructuredFieldValueSchema = StructuredValueArraySchema;
+
+// Type exports with better names
+export type FieldValue = z.infer<typeof FieldValueSchema>;
+export type PrimitiveFieldValue = string | string[];
+export type StructuredFieldValue = Array<{
+  label: string;
+  slug: string;
+  value: string;
+}>;
 
 export const PageContextFieldSchema = z.object({
   slug: FieldSlugSchema,
