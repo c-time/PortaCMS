@@ -137,6 +137,14 @@ export const ContentItemStructureSchema = z.object({
     uiMetadata: UIMetadataSchema,
   })),
 
+  categories: z.array(z.object({
+    slug: z.string() // Attribute ID
+      .min(1, { message: "Slug is required" })
+      .max(100, { message: "Slug must not exceed 100 characters" })
+      .regex(/^[a-z0-9\-_]+$/, { message: "Slug must contain only lowercase letters, numbers, hyphens, and underscores" }),
+    label: z.string(), // Display Label
+  })).default([]),
+
   version: z.number().int().min(1).default(1),
   createdAt: z.date(),
   updatedAt: z.date(),
@@ -184,7 +192,6 @@ export const ContentListViewStructureSchema = z.object({
 export const ContentListStructureSchema = z.object({
   contentItemStructure: ContentItemStructureSchema,
   contentListViewStructure: z.array(ContentListViewStructureSchema).default([]),
-  enablePublishScheduling: z.boolean().default(false),
 });
 
 // Type is defined above
@@ -206,7 +213,12 @@ export const ContentListSchema = z.object({
   description: z.string()
     .max(500, { message: "Description must not exceed 500 characters" })
     .optional(),
+
   contentListStructure: ContentListStructureSchema,
+
+  enablePublishScheduling: z.boolean().default(false),
+  enableTags: z.boolean().default(false),
+  enableCategories: z.boolean().default(false),
 
   isActive: z.boolean().default(true),
   version: z.number().int().min(1).default(1),

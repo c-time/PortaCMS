@@ -2,17 +2,6 @@ import { z } from 'zod';
 import { ContentItemId } from '../ids';
 import { DataTypesSchema } from '../content-list/entities';
 
-// Content property value types
-export const ContentPropertyValueSchema = z.union([
-  z.string(),
-  z.number(),
-  z.boolean(),
-  z.date(),
-  z.array(z.unknown()),
-  z.record(z.string(), z.unknown()),
-  z.null()
-], { message: "Invalid property value type" });
-
 // Content item attribute definition
 export const ContentItemAttributeSchema = z.object({
   slug: z.string()
@@ -34,6 +23,7 @@ export const ContentItemSchema = z.object({
   createdBy: z.string().optional(),
   updatedBy: z.string().optional(),
   version: z.number().int().min(1).default(1),
+  categories: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),
   status: z.enum(['draft', 'published', 'archived'], {
     message: "Status must be draft, published, or archived"
@@ -44,7 +34,5 @@ export const ContentItemSchema = z.object({
     .regex(/^[a-z0-9\-_/]+$/, { message: "Slug must contain only lowercase letters, numbers, hyphens, underscores, and slashes" }),
 });
 
-export type ContentPropertyValue = z.infer<typeof ContentPropertyValueSchema>;
 export type ContentItemProperty = z.infer<typeof ContentItemAttributeSchema>;
-export type ContentItemMetadata = z.infer<typeof ContentItemMetadataSchema>;
 export type ContentItem = z.infer<typeof ContentItemSchema>;
