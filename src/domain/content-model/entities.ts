@@ -149,18 +149,16 @@ export type ListContentModelStructure = z.infer<typeof ListContentModelStructure
 export const ListContentModelSchema = z.object({
   slug: ContentModelSlugSchema,
   name: z.string()
-    .min(1, { message: "Content list name is required" })
-    .max(100, { message: "Content list name must not exceed 100 characters" }),
+    .min(1, { message: "Content list name is required" }),
   description: z.string()
-    .max(500, { message: "Description must not exceed 500 characters" })
     .optional(),
 
   listContentModelStructure: ListContentModelStructureSchema,
 
-  enablePublishScheduling: z.boolean().default(false),
   enableTags: z.boolean().default(false),
   enableCategories: z.boolean().default(false),
 
+  enablePublishScheduling: z.boolean().default(false),
   isActive: z.boolean().default(true),
   version: z.number().int().min(1).default(1),
   createdAt: z.date(),
@@ -174,8 +172,18 @@ export const ObjectContentModelStructureSchema = z.object({
 
 export const ObjectContentModelSchema = z.object({
   slug: ContentModelSlugSchema,
-  name: z.string(),
+  name: z.string()
+    .min(1, { message: "Content list name is required" }),
+  description: z.string()
+    .optional(),
+
   objectContentModelStructure: ObjectContentModelStructureSchema,
+
+  enablePublishScheduling: z.boolean().default(false),
+  isActive: z.boolean().default(true),
+  version: z.number().int().min(1).default(1),
+  createdAt: z.date(),
+  updatedAt: z.date(),
 });
 
 export type ListContentModel = z.infer<typeof ListContentModelSchema>;
