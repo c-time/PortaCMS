@@ -11,7 +11,7 @@ export const ContentItemSlugSchema = SlugSchema.brand('ContentItemSlug');
 
 export const CategorySlugSchema = SlugSchema.brand('CategorySlug');
 
-export const ContentListSlugSchema = SlugSchema.brand('ContentListSlug');
+export const ContentModelSlugSchema = SlugSchema.brand('ContentModelSlug');
 
 export const ContentListViewSlugSchema = SlugSchema.brand('ContentListViewSlug');
 

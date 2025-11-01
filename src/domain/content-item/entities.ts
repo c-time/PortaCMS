@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { ContentItemId } from '../shared/ids';
-import { DataTypesSchema } from '../content-list/entities';
 import { FieldSlugSchema, ContentItemSlugSchema } from '../shared/entities';
+import { DataTypesSchema } from '../content-model/entities';
 
 // Content item attribute definition
 export const ContentItemFieldSchema = z.object({
