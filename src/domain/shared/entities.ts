@@ -39,6 +39,8 @@ export const PageContextFieldSchema = z.object({
 
 export const JSONataExpressionSchema = z.string().min(1).describe("Expression in JSONata path syntax").brand('JSONataExpression');
 
+export type JSONataExpression = z.infer<typeof JSONataExpressionSchema>;
+
 export const VirtualFieldSchema = z.object({
     slug: FieldSlugSchema,
     expression: JSONataExpressionSchema,
