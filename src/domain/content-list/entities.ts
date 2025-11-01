@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CategorySlugSchema, FieldSlugSchema, ContentListSlugSchema } from '../shared/entities';
+import { CategorySlugSchema, FieldSlugSchema, ContentListViewSlugSchema , ContentListSlugSchema } from '../shared/entities';
 
 
 // String
@@ -108,6 +108,7 @@ export const ContentItemStructureSchema = z.object({
 
 // Content list view structure
 export const ContentListViewStructureSchema = z.object({
+  slug: ContentListViewSlugSchema,
   name: z.string()
     .min(1, { message: "View structure name is required" })
     .max(100, { message: "View structure name must not exceed 100 characters" }),

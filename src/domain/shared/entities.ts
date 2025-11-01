@@ -13,6 +13,8 @@ export const CategorySlugSchema = SlugSchema.brand('CategorySlug');
 
 export const ContentListSlugSchema = SlugSchema.brand('ContentListSlug');
 
+export const ContentListViewSlugSchema = SlugSchema.brand('ContentListViewSlug');
+
 export const FieldSchema = z.record(FieldSlugSchema, 
     z.array(z.string())
     .or(z.string())

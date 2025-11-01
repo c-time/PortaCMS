@@ -1,10 +1,10 @@
 import { z } from 'zod';
-import { AttributesSchema, PaginationContextSchema, SlugSchema } from '../shared/entities';
+import { PaginationContextSchema, ContentListViewSlugSchema, FieldSlugSchema } from '../shared/entities';
 
 
 export const ContentListViewSchema = z.object({
-  slug: SlugSchema,
-  attributes: z.array(AttributesSchema),
+  slug: ContentListViewSlugSchema,
+  attributes: z.array(FieldSlugSchema),
   generatedAt: z.date(),
   paginationContext: PaginationContextSchema,
   
