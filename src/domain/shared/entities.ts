@@ -7,8 +7,6 @@ const SlugSchema = z.string()
 
 export const WorkspaceSlugSchema = SlugSchema.brand('WorkspaceSlug');
 
-export type WorkspaceSlug = z.infer<typeof WorkspaceSlugSchema>;
-
 export const FieldSlugSchema = SlugSchema.brand('FieldSlug');
 
 export const ContentItemSlugSchema = SlugSchema.brand('ContentItemSlug');
@@ -18,6 +16,13 @@ export const CategorySlugSchema = SlugSchema.brand('CategorySlug');
 export const ContentModelSlugSchema = SlugSchema.brand('ContentModelSlug');
 
 export const ContentListViewSlugSchema = SlugSchema.brand('ContentListViewSlug');
+
+export type WorkspaceSlug = z.infer<typeof WorkspaceSlugSchema>;
+export type FieldSlug = z.infer<typeof FieldSlugSchema>;
+export type ContentItemSlug = z.infer<typeof ContentItemSlugSchema>;
+export type CategorySlug = z.infer<typeof CategorySlugSchema>;
+export type ContentModelSlug = z.infer<typeof ContentModelSlugSchema>;
+export type ContentListViewSlug = z.infer<typeof ContentListViewSlugSchema>;
 
 export const FieldValueSchema = z.array(z.string())
     .or(z.string())
