@@ -1,13 +1,11 @@
 import { z } from 'zod';
 import { ContentItemId } from '../ids';
 import { DataTypesSchema } from '../content-list/entities';
+import { SlugSchema } from '../shared/entities';
 
 // Content item attribute definition
 export const ContentItemAttributeSchema = z.object({
-  slug: z.string()
-    .min(1, { message: "Attribute slug is required" })
-    .max(100, { message: "Attribute slug must not exceed 100 characters" })
-    .regex(/^[a-zA-Z][a-zA-Z0-9_]*$/, { message: "Attribute slug must start with letter and contain only letters, numbers, and underscores" }),
+  slug: SlugSchema,
   value: z.string().array().default([]), // Supports multiple values
   schema: DataTypesSchema,
 });
@@ -16,6 +14,11 @@ export const ContentItemAttributeSchema = z.object({
 export const ContentItemSchema = z.object({
   id: ContentItemId,
   attributes: z.array(ContentItemAttributeSchema),
+  virtualFields: z.array(z.object({
+    slug: SlugSchema,
+    expression: z.string().min(1).describe("Expression to compute the virtual field's value with JSONata path syntax"),
+    label: z.string().min(1),
+  })).default([]),
   publishedAt: z.date().optional(),
   expiresAt: z.date().optional(),
   createdAt: z.date(),
@@ -28,10 +31,7 @@ export const ContentItemSchema = z.object({
   status: z.enum(['draft', 'published', 'archived'], {
     message: "Status must be draft, published, or archived"
   }).default('draft'),
-  slug: z.string()
-    .min(1, { message: "Slug is required" })
-    .max(200, { message: "Slug must not exceed 200 characters" })
-    .regex(/^[a-z0-9\-_/]+$/, { message: "Slug must contain only lowercase letters, numbers, hyphens, underscores, and slashes" }),
+  slug: SlugSchema,
 });
 
 export type ContentItemProperty = z.infer<typeof ContentItemAttributeSchema>;

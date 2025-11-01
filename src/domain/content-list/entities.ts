@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { SlugSchema } from '../shared/entities';
 
 /* {
 
@@ -128,20 +129,14 @@ export const UIMetadataSchema = z.object({
 // Content item structure definition
 export const ContentItemStructureSchema = z.object({
   attributes : z.array(z.object({
-    slug: z.string() // Attribute ID
-      .min(1, { message: "Slug is required" })
-      .max(100, { message: "Slug must not exceed 100 characters" })
-      .regex(/^[a-z0-9\-_]+$/, { message: "Slug must contain only lowercase letters, numbers, hyphens, and underscores" }),
+    slug: SlugSchema,
     label: z.string(), // Display Label
     schema : DataTypesSchema,
     uiMetadata: UIMetadataSchema,
   })),
 
   categories: z.array(z.object({
-    slug: z.string() // Attribute ID
-      .min(1, { message: "Slug is required" })
-      .max(100, { message: "Slug must not exceed 100 characters" })
-      .regex(/^[a-z0-9\-_]+$/, { message: "Slug must contain only lowercase letters, numbers, hyphens, and underscores" }),
+    slug:  SlugSchema,
     label: z.string(), // Display Label
   })).default([]),
 
@@ -149,6 +144,8 @@ export const ContentItemStructureSchema = z.object({
   createdAt: z.date(),
   updatedAt: z.date(),
 });
+
+
 
 // Content list view structure
 export const ContentListViewStructureSchema = z.object({
@@ -159,14 +156,6 @@ export const ContentListViewStructureSchema = z.object({
     .max(500, { message: "Description must not exceed 500 characters" })
     .optional(),
   fields: z.array(z.string().min(1)).min(1, { message: "At least one field must be selected for the view" }),
-  virtualFields: z.array(z.object({
-    slug: z.string() // Virtual field ID
-      .min(1, { message: "Slug is required" })
-      .max(100, { message: "Slug must not exceed 100 characters" })
-      .regex(/^[a-z0-9\-_]+$/, { message: "Slug must contain only lowercase letters, numbers, hyphens, and underscores" }),
-    expression: z.string().min(1).describe("Expression to compute the virtual field's value with JSONata path syntax"),
-    label: z.string().min(1),
-  })).default([]),
   sortFields: z.array(z.object({
     field: z.string().min(1),
     order: z.enum(['asc', 'desc']).default('asc'),
@@ -178,10 +167,11 @@ export const ContentListViewStructureSchema = z.object({
   })).default([]),
   groupByFields: z.array(z.string()).default([]),
   pagination: z.object({
-    enabled: z.boolean().default(false),
-    pageSize: z.number().int().min(1).max(1000).default(100),
-    maxPages: z.number().int().min(1).optional(),
-  }).default({ enabled: false, pageSize: 10 }),
+    enabled: z.boolean(),
+    limitPerPage: z.number().int().min(1).max(1000),
+    pageNeighborDisplayCount: z.number().int().min(0),
+    pageEdgeDisplayCount: z.number().int().min(0),
+  }).default({ enabled: true, limitPerPage: 20, pageNeighborDisplayCount: 2, pageEdgeDisplayCount: 3 }),
 
   isActive: z.boolean().default(true),
   createdAt: z.date(),
@@ -203,10 +193,7 @@ export type ContentListStructure = z.infer<typeof ContentListStructureSchema>;
 
 // Content list entity
 export const ContentListSchema = z.object({
-  slug: z.string()
-    .min(1, { message: "Slug is required" })
-    .max(100, { message: "Slug must not exceed 100 characters" })
-    .regex(/^[a-z0-9\-_]+$/, { message: "Slug must contain only lowercase letters, numbers, hyphens, and underscores" }),
+  slug: SlugSchema,
   name: z.string()
     .min(1, { message: "Content list name is required" })
     .max(100, { message: "Content list name must not exceed 100 characters" }),

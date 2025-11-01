@@ -1,6 +1,5 @@
 import { z } from 'zod';
-import { UUIDSchema } from '../workspace/entities.js';
-import { is } from 'zod/v4/locales';
+import { AttributesSchema, PaginationContextSchema } from '../shared/entities';
 
 // Transformation operation definitions
 export const SortOperationSchema = z.object({
@@ -61,16 +60,6 @@ export const ViewTransformationResultSchema = z.object({
 });
 
 
-const AttributesSchema = z.record(z.string(), 
-    z.array(z.string())
-    .or(z.string())
-    .or(z.array(z.object({
-      label: z.string(),
-      slug: z.string(),
-      value: z.string(),
-    })))
-    ).default({});
-
 const DefaultPageContentViewSchema = z.object({
   // page context
   pageContext: z.object({}),
@@ -82,43 +71,13 @@ const DefaultPageContentViewSchema = z.object({
 
 
 
-
 // 
 const StaticPageContentViewSchema = z.object({
 }).extend(DefaultPageContentViewSchema.shape);
 
 const IndexPageContentViewSchema = z.object({
   // pagination context
-  paginationContext: z.object({
-    items: z.array(AttributesSchema).default([]),
-    links : z.object({
-      // Examples:
-      // [1,2,3, * ,9,10, *,   12,13, * , 98,99,100]
-      // [1,2,3]
-      // [1,2,3, 4,5, * , 98,99,100]
-      // [1,2, "C3", 4,5, * , 6,7,8,9,10,11]
-
-      //|◀ ◀  1 2 3 ... 9 10 **11** 12 13 ... 98 99 100 ▶ ▶|
-      //|◀ ◀  1 **2** 3 ▶ ▶|
-      //|◀ ◀  1 2 **3** 4 5 ... 98 99 100 ▶ ▶|
-      //|◀ ◀  1 2 3 4 **5** 6 7 8 9 10 11 ▶ ▶|
-      //|◀ ◀  3 / 100 ▶ ▶|
-
-      first: z.boolean().optional(),
-      last: z.boolean().optional(),
-      next: z.boolean().optional(),
-      previous: z.boolean().optional(),
-      pages: 
-        z.object( {
-          number: z.number().int().min(1),
-          isSeparator: z.boolean().default(false),
-          isCurrent: z.boolean().default(false),
-          url: z.string().min(1, { message: "URL is required" }).optional(),
-        }).array().optional(),
-    }).optional(),
-    currentPage: z.number().int().min(1).default(1),
-    totalPages: z.number().int().min(1).default(1),
-  }),
+  paginationContext: PaginationContextSchema,
 }).extend(DefaultPageContentViewSchema.shape);
 
 const ItemPageContentViewSchema = z.object({
@@ -126,16 +85,10 @@ const ItemPageContentViewSchema = z.object({
   attributes: AttributesSchema,
 }).extend(DefaultPageContentViewSchema.shape);;
 
-
 // Page content view entity
-export const PageContentViewSchema = z.object({
-  // page context
-  // attributes
-  // page type (static, index, item)
-  metadata : z.object({
-    type: z.enum(['static', 'index', 'item'], { message: "Page type must be static, index, or item" }),
-  }),
-});
+export const PageContentViewSchema = 
+  ItemPageContentViewSchema.or(IndexPageContentViewSchema).or(StaticPageContentViewSchema);
+
 
 export type SortOperation = z.infer<typeof SortOperationSchema>;
 export type FilterOperation = z.infer<typeof FilterOperationSchema>;
