@@ -15,9 +15,7 @@ export const ContentModelSlugSchema = SlugSchema.brand('ContentModelSlug');
 
 export const ContentListViewSlugSchema = SlugSchema.brand('ContentListViewSlug');
 
-export const PageContentViewSlugSchema = SlugSchema.brand('PageContentViewSlug');
-
-export const FieldSchema = z.array(z.string())
+export const FieldValueSchema = z.array(z.string())
     .or(z.string())
     .or(z.array(z.object({
       label: z.string(),
@@ -25,6 +23,18 @@ export const FieldSchema = z.array(z.string())
       value: z.string(),
     })));
 
+export const PageContextFieldSchema = z.object({
+  slug: FieldSlugSchema,
+  value: FieldValueSchema, // Supports multiple values
+});
+
+export const JSONataExpressionSchema = z.string().min(1).describe("Expression in JSONata path syntax").brand('JSONataExpression');
+
+export const VirtualFieldSchema = z.object({
+    slug: FieldSlugSchema,
+    expression: JSONataExpressionSchema,
+    label: z.string().min(1),
+  });
 
 export const PaginationContextSchema = z.object({
     // Examples:
@@ -39,7 +49,7 @@ export const PaginationContextSchema = z.object({
     //|◀ ◀  1 2 3 4 **5** 6 7 8 9 10 11 ▶ ▶|
     //|◀ ◀  3 / 100 ▶ ▶|
 
-    items: z.array(FieldSchema).default([]),
+    items: z.array(FieldValueSchema).default([]),
     links : z.object({
       first: z.boolean().optional(),
       last: z.boolean().optional(),

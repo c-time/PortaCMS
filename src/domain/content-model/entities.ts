@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CategorySlugSchema, FieldSlugSchema, ContentListViewSlugSchema , ContentModelSlugSchema } from '../shared/entities';
+import { CategorySlugSchema, FieldSlugSchema, ContentListViewSlugSchema , ContentModelSlugSchema, VirtualFieldSchema } from '../shared/entities';
 
 
 // String
@@ -79,6 +79,7 @@ export const UIMetadataSchema = z.object({
 });
 
 
+
 // Content item structure definition
 export const ContentItemStructureSchema = z.object({
   fields : z.array(z.object({
@@ -88,11 +89,7 @@ export const ContentItemStructureSchema = z.object({
     uiMetadata: UIMetadataSchema,
   })),
 
-  virtualFields: z.array(z.object({
-    slug: FieldSlugSchema,
-    expression: z.string().min(1).describe("Expression to compute the virtual field's value with JSONata path syntax"),
-    label: z.string().min(1),
-  })).default([]),
+  virtualFields: z.array(VirtualFieldSchema).default([]),
 
   categories: z.array(z.object({
     slug:  CategorySlugSchema,
@@ -113,17 +110,17 @@ export const ContentListViewStructureSchema = z.object({
   description: z.string()
     .max(500, { message: "Description must not exceed 500 characters" })
     .optional(),
-  fields: z.array(z.string().min(1)).min(1, { message: "At least one field must be selected for the view" }),
+  fields: z.array(FieldSlugSchema).min(1, { message: "At least one field must be selected for the view" }),
   sortFields: z.array(z.object({
-    field: z.string().min(1),
+    field: FieldSlugSchema,
     order: z.enum(['asc', 'desc']).default('asc'),
   })).default([]),
   filterRules: z.array(z.object({
-    field: z.string().min(1),
+    field: FieldSlugSchema,
     operator: z.enum(['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'contains', 'startsWith', 'endsWith', 'matches']).default('eq'),
     value: z.unknown(),
   })).default([]),
-  groupByFields: z.array(z.string()).default([]),
+  groupByFields: z.array(FieldSlugSchema).default([]),
   pagination: z.object({
     enabled: z.boolean(),
     limitPerPage: z.number().int().min(1).max(1000),
