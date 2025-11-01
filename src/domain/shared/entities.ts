@@ -5,6 +5,10 @@ const SlugSchema = z.string()
       .max(100, { message: "Slug must not exceed 100 characters" })
       .regex(/^[a-z0-9\-_]+$/, { message: "Slug must contain only lowercase letters, numbers, hyphens, and underscores" });
 
+export const WorkspaceSlugSchema = SlugSchema.brand('WorkspaceSlug');
+
+export type WorkspaceSlug = z.infer<typeof WorkspaceSlugSchema>;
+
 export const FieldSlugSchema = SlugSchema.brand('FieldSlug');
 
 export const ContentItemSlugSchema = SlugSchema.brand('ContentItemSlug');
