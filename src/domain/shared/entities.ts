@@ -15,6 +15,8 @@ export const ContentListSlugSchema = SlugSchema.brand('ContentListSlug');
 
 export const ContentListViewSlugSchema = SlugSchema.brand('ContentListViewSlug');
 
+export const PageContentViewSlugSchema = SlugSchema.brand('PageContentViewSlug');
+
 export const FieldSchema = z.array(z.string())
     .or(z.string())
     .or(z.array(z.object({

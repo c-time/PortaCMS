@@ -37,7 +37,7 @@ export const StringConcatenationSchema = z.object({
 });
 
 
-
+// TODO: Extend with more common fields as needed
 const DefaultPageContentViewSchema = z.object({
   // page context
   pageContext: z.object({}),
