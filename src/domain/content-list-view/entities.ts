@@ -4,7 +4,7 @@ import { PaginationContextSchema, ContentListViewSlugSchema, FieldSlugSchema } f
 
 export const ContentListViewSchema = z.object({
   slug: ContentListViewSlugSchema,
-  attributes: z.array(FieldSlugSchema),
+  fields: z.array(FieldSlugSchema),
   generatedAt: z.date(),
   paginationContext: PaginationContextSchema,
   

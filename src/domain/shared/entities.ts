@@ -15,15 +15,14 @@ export const ContentListSlugSchema = SlugSchema.brand('ContentListSlug');
 
 export const ContentListViewSlugSchema = SlugSchema.brand('ContentListViewSlug');
 
-export const FieldSchema = z.record(FieldSlugSchema, 
-    z.array(z.string())
+export const FieldSchema = z.array(z.string())
     .or(z.string())
     .or(z.array(z.object({
       label: z.string(),
       slug: z.string(),
       value: z.string(),
-    })))
-    ).default({});
+    })));
+
 
 export const PaginationContextSchema = z.object({
     // Examples:

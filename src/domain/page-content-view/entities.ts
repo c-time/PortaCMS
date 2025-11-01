@@ -1,5 +1,7 @@
 import { z } from 'zod';
-import { AttributesSchema, PaginationContextSchema } from '../shared/entities';
+import { FieldSchema, PaginationContextSchema, FieldSlugSchema, ContentListViewSlugSchema } from '../shared/entities';
+
+const FieldsSchema = z.record(FieldSlugSchema, FieldSchema).default({});
 
 // Transformation operation definitions
 export const SortOperationSchema = z.object({
@@ -34,41 +36,16 @@ export const StringConcatenationSchema = z.object({
   template: z.string().optional(), // e.g., "{field1} - {field2}"
 });
 
-// Transformation parameters
-export const ViewTransformationParametersSchema = z.object({
-  sorts: z.array(SortOperationSchema).default([]),
-  filters: z.array(FilterOperationSchema).default([]),
-  pagination: PaginationConfigSchema.optional(),
-  groupBy: GroupByConfigSchema.optional(),
-  stringConcatenations: z.array(StringConcatenationSchema).default([]),
-  fieldMappings: z.record(z.string(), z.string()).default({}), // field rename mappings
-  includeFields: z.array(z.string()).optional(), // whitelist fields
-  excludeFields: z.array(z.string()).default([]), // blacklist fields
-});
-
-// Transformation result
-export const ViewTransformationResultSchema = z.object({
-  data: z.array(z.record(z.string(), z.unknown())),
-  metadata: z.object({
-    totalCount: z.number().int().min(0),
-    pageCount: z.number().int().min(0).optional(),
-    currentPage: z.number().int().min(0).optional(),
-    hasNextPage: z.boolean().optional(),
-    hasPreviousPage: z.boolean().optional(),
-    transformedAt: z.date(),
-  }),
-});
 
 
 const DefaultPageContentViewSchema = z.object({
   // page context
   pageContext: z.object({}),
   // global contents
-  globalContents: AttributesSchema,
+  globalContents: FieldsSchema,
   // listViews
-  listViews: z.record(z.string(), z.array(AttributesSchema)).default({}),
+  listViews: z.record(ContentListViewSlugSchema, FieldsSchema).default({}),
 });
-
 
 
 // 
@@ -81,8 +58,8 @@ const IndexPageContentViewSchema = z.object({
 }).extend(DefaultPageContentViewSchema.shape);
 
 const ItemPageContentViewSchema = z.object({
-  // attributes
-  attributes: AttributesSchema,
+  // fields
+  fields: FieldsSchema,
 }).extend(DefaultPageContentViewSchema.shape);;
 
 // Page content view entity
@@ -95,6 +72,4 @@ export type FilterOperation = z.infer<typeof FilterOperationSchema>;
 export type PaginationConfig = z.infer<typeof PaginationConfigSchema>;
 export type GroupByConfig = z.infer<typeof GroupByConfigSchema>;
 export type StringConcatenation = z.infer<typeof StringConcatenationSchema>;
-export type ViewTransformationParameters = z.infer<typeof ViewTransformationParametersSchema>;
-export type ViewTransformationResult = z.infer<typeof ViewTransformationResultSchema>;
 export type PageContentView = z.infer<typeof PageContentViewSchema>;
