@@ -133,7 +133,7 @@ export const ContentItemStructureSchema = z.object({
       .max(100, { message: "Slug must not exceed 100 characters" })
       .regex(/^[a-z0-9\-_]+$/, { message: "Slug must contain only lowercase letters, numbers, hyphens, and underscores" }),
     label: z.string(), // Display Label
-    type : DataTypesSchema,
+    schema : DataTypesSchema,
     uiMetadata: UIMetadataSchema,
   })),
 
@@ -184,6 +184,7 @@ export const ContentListViewStructureSchema = z.object({
 export const ContentListStructureSchema = z.object({
   contentItemStructure: ContentItemStructureSchema,
   contentListViewStructure: z.array(ContentListViewStructureSchema).default([]),
+  enablePublishScheduling: z.boolean().default(false),
 });
 
 // Type is defined above
