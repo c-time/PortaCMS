@@ -145,8 +145,9 @@ export type ContentListViewStructure = z.infer<typeof ContentListViewStructureSc
 export type ListContentModelStructure = z.infer<typeof ListContentModelStructureSchema>;
 
 
-// Content list entity
+// Content list entity (collection of multiple items)
 export const ListContentModelSchema = z.object({
+  modelType: z.literal('list'),
   slug: ContentModelSlugSchema,
   name: z.string()
     .min(1, { message: "Content list name is required" }),
@@ -170,10 +171,12 @@ export const ObjectContentModelStructureSchema = z.object({
   contentItemStructure: ContentItemStructureSchema,
 });
 
+// Object content entity (singleton item)
 export const ObjectContentModelSchema = z.object({
+  modelType: z.literal('object'),
   slug: ContentModelSlugSchema,
   name: z.string()
-    .min(1, { message: "Content list name is required" }),
+    .min(1, { message: "Content object name is required" }),
   description: z.string()
     .optional(),
 
@@ -189,6 +192,10 @@ export const ObjectContentModelSchema = z.object({
 export type ListContentModel = z.infer<typeof ListContentModelSchema>;
 export type ObjectContentModel = z.infer<typeof ObjectContentModelSchema>;
 
-export const ContentModelSchema = z.union([ListContentModelSchema, ObjectContentModelSchema]);
+// Content model with discriminated union
+export const ContentModelSchema = z.discriminatedUnion('modelType', [
+  ListContentModelSchema,
+  ObjectContentModelSchema,
+]);
 
 export type ContentModel = z.infer<typeof ContentModelSchema>;
