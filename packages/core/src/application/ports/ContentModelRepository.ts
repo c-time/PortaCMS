@@ -1,5 +1,5 @@
-import { ContentModel, ListContentModel, ObjectContentModel } from '../../domain/content-model/entities';
-import { ContentModelSlug, WorkspaceSlug } from '../../domain/shared/entities';
+import { ContentModel, ListContentModel, ObjectContentModel } from '../../domain/content-model/entities.js';
+import { ContentModelSlug, WorkspaceSlug } from '../../domain/shared/entities.js';
 
 /**
  * Repository interface for ContentModel aggregate root

@@ -10,8 +10,8 @@
  * - Repositories hide implementation details from the domain layer
  */
 
-export { ProjectRepository } from './ProjectRepository';
-export { WorkspaceRepository } from './WorkspaceRepository';
-export { WebsiteRepository } from './WebsiteRepository';
-export { ContentModelRepository } from './ContentModelRepository';
-export { ContentItemRepository, ContentItemQueryOptions, ContentItemIdType } from './ContentItemRepository';
+export { ProjectRepository } from './ProjectRepository.js';
+export { WorkspaceRepository } from './WorkspaceRepository.js';
+export { WebsiteRepository } from './WebsiteRepository.js';
+export { ContentModelRepository } from './ContentModelRepository.js';
+export { ContentItemRepository, ContentItemQueryOptions, ContentItemIdType } from './ContentItemRepository.js';

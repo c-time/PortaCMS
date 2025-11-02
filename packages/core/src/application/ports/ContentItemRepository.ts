@@ -1,7 +1,7 @@
-import { ContentItem } from '../../domain/content-item/entities';
-import { ContentModelSlug, ContentItemSlug, WorkspaceSlug } from '../../domain/shared/entities';
+import { ContentItem } from '../../domain/content-item/entities.js';
+import { ContentModelSlug, ContentItemSlug, WorkspaceSlug } from '../../domain/shared/entities.js';
 import { z } from 'zod';
-import { ContentItemId } from '../../domain/shared/ids';
+import { ContentItemId } from '../../domain/shared/ids.js';
 
 // Type for ContentItemId
 export type ContentItemIdType = z.infer<typeof ContentItemId>;

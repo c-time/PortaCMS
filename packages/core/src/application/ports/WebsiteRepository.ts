@@ -1,5 +1,5 @@
-import { Website } from '../../domain/website/entities';
-import { WorkspaceSlug } from '../../domain/shared/entities';
+import { Website } from '../../domain/website/entities.js';
+import { WorkspaceSlug } from '../../domain/shared/entities.js';
 
 /**
  * Repository interface for Website aggregate root

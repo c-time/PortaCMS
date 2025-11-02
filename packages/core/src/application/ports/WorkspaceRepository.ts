@@ -1,5 +1,5 @@
-import { Workspace } from '../../domain/workspace/entities';
-import { WorkspaceSlug } from '../../domain/shared/entities';
+import { Workspace } from '../../domain/workspace/entities.js';
+import { WorkspaceSlug } from '../../domain/shared/entities.js';
 
 /**
  * Repository interface for Workspace aggregate root
