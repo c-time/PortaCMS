@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { FieldValueSchema, PaginationContextSchema, FieldSlugSchema, ContentListViewSlugSchema, PageContextFieldSchema } from '../shared/entities';
+import { FieldValueSchema, PaginationContextSchema, FieldSlugSchema, ContentListViewSlugSchema, PageContextFieldSchema } from '../shared/entities.js';
 
 const FieldsRecordSchema = z.record(FieldSlugSchema, FieldValueSchema).default({});
 const ObjectContentsSchema = z.record(FieldSlugSchema, FieldValueSchema).default({});

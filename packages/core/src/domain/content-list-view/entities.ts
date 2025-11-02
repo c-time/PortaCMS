@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PaginationContextSchema, ContentListViewSlugSchema, FieldSlugSchema } from '../shared/entities';
+import { PaginationContextSchema, ContentListViewSlugSchema, FieldSlugSchema } from '../shared/entities.js';
 
 
 // Root Content List View entity

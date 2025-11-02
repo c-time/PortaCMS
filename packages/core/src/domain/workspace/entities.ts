@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { WorkspaceSlug, WorkspaceSlugSchema } from '../shared/entities';
+import { WorkspaceSlug, WorkspaceSlugSchema } from '../shared/entities.js';
 
 // Project entity - root level project management
 export const ProjectSchema = z.object({

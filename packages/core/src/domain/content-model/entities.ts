@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CategorySlugSchema, FieldSlugSchema, ContentListViewSlugSchema , ContentModelSlugSchema, VirtualFieldSchema } from '../shared/entities';
+import { CategorySlugSchema, FieldSlugSchema, ContentListViewSlugSchema , ContentModelSlugSchema, VirtualFieldSchema } from '../shared/entities.js';
 
 
 // String

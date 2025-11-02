@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ContentModelSlugSchema, ContentListViewSlugSchema, PageContextFieldSchema, VirtualFieldSchema, JSONataExpressionSchema } from '../shared/entities';
+import { ContentModelSlugSchema, ContentListViewSlugSchema, PageContextFieldSchema, VirtualFieldSchema, JSONataExpressionSchema } from '../shared/entities.js';
 
 const PagePathSchema = z.string().brand<'PagePath'>();
 

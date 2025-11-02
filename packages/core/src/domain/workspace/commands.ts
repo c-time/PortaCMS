@@ -1,5 +1,5 @@
-import { Workspace, Project } from './entities';
-import { WorkspaceSlug } from '../shared/entities';
+import { Workspace, Project } from './entities.js';
+import { WorkspaceSlug } from '../shared/entities.js';
 
 // ========================================
 // Error Definitions
