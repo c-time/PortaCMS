@@ -4,6 +4,7 @@
  * File structure: content-items/{workspaceSlug}/{contentModelSlug}/{itemId}.json
  */
 
+import { join } from 'path';
 import type {
   ContentItemRepository,
   ContentItemQueryOptions,
@@ -11,15 +12,15 @@ import type {
 } from '../../application/ports/ContentItemRepository.js';
 import type { ContentItem } from '../../domain/content-item/entities.js';
 import type { ContentModelSlug, ContentItemSlug, WorkspaceSlug } from '../../domain/shared/entities.js';
-import type { LocalStorageConfig } from './types.js';
-import { DEFAULT_LOCAL_STORAGE_CONFIG, LOCAL_STORAGE_PATHS } from './types.js';
+import type { LocalStorageConfig, StorageFiles } from './types.js';
+import { DEFAULT_LOCAL_STORAGE_CONFIG } from './types.js';
+import { LocalStorageFiles } from './LocalStorageFiles.js';
 import {
   readJsonFile,
   writeJsonFile,
   deleteFile,
   fileExists,
   listFiles,
-  buildPath,
   ensureDirectory,
   deserialize,
   serialize,
@@ -29,23 +30,11 @@ const DATE_FIELDS = ['createdAt', 'updatedAt', 'publishedAt', 'expiresAt'];
 
 export class LocalContentItemRepository implements ContentItemRepository {
   private readonly config: LocalStorageConfig;
-  private readonly contentItemsDir: string;
+  private readonly storageFiles: StorageFiles;
 
   constructor(config: Partial<LocalStorageConfig> = {}) {
     this.config = { ...DEFAULT_LOCAL_STORAGE_CONFIG, ...config };
-    this.contentItemsDir = buildPath(this.config.baseDir, LOCAL_STORAGE_PATHS.CONTENT_ITEMS);
-  }
-
-  private getModelDir(workspaceSlug: WorkspaceSlug, contentModelSlug: ContentModelSlug): string {
-    return buildPath(this.contentItemsDir, workspaceSlug, contentModelSlug);
-  }
-
-  private getContentItemFilePath(
-    workspaceSlug: WorkspaceSlug,
-    contentModelSlug: ContentModelSlug,
-    id: ContentItemIdType
-  ): string {
-    return buildPath(this.getModelDir(workspaceSlug, contentModelSlug), `${id}.json`);
+    this.storageFiles = new LocalStorageFiles(this.config.baseDir);
   }
 
   async findById(
@@ -53,8 +42,9 @@ export class LocalContentItemRepository implements ContentItemRepository {
     contentModelSlug: ContentModelSlug,
     id: ContentItemIdType
   ): Promise<ContentItem | null> {
-    const filePath = this.getContentItemFilePath(workspaceSlug, contentModelSlug, id);
-    const data = await readJsonFile<unknown>(filePath);
+    const data = await readJsonFile<unknown>(
+      this.storageFiles.contentModelItemFile(workspaceSlug, contentModelSlug, id)
+    );
 
     if (!data) {
       return null;
@@ -68,12 +58,12 @@ export class LocalContentItemRepository implements ContentItemRepository {
     contentModelSlug: ContentModelSlug,
     slug: ContentItemSlug
   ): Promise<ContentItem | null> {
-    const modelDir = this.getModelDir(workspaceSlug, contentModelSlug);
-    const files = await listFiles(modelDir);
+    const itemsDir = this.storageFiles.contentModelItemsDir(workspaceSlug, contentModelSlug);
+    const files = await listFiles(itemsDir);
 
     for (const file of files) {
       if (file.endsWith('.json')) {
-        const filePath = buildPath(modelDir, file);
+        const filePath = join(itemsDir, file);
         const data = await readJsonFile<unknown>(filePath);
         if (data) {
           const item = deserialize<ContentItem>(data, DATE_FIELDS);
@@ -92,18 +82,18 @@ export class LocalContentItemRepository implements ContentItemRepository {
     contentModelSlug: ContentModelSlug,
     options?: ContentItemQueryOptions
   ): Promise<ContentItem[]> {
-    const modelDir = this.getModelDir(workspaceSlug, contentModelSlug);
+    const itemsDir = this.storageFiles.contentModelItemsDir(workspaceSlug, contentModelSlug);
 
     if (this.config.autoCreateDirectories) {
-      await ensureDirectory(modelDir);
+      await ensureDirectory(itemsDir);
     }
 
-    const files = await listFiles(modelDir);
+    const files = await listFiles(itemsDir);
     let contentItems: ContentItem[] = [];
 
     for (const file of files) {
       if (file.endsWith('.json')) {
-        const filePath = buildPath(modelDir, file);
+        const filePath = join(itemsDir, file);
         const data = await readJsonFile<unknown>(filePath);
         if (data) {
           const item = deserialize<ContentItem>(data, DATE_FIELDS);
@@ -207,9 +197,12 @@ export class LocalContentItemRepository implements ContentItemRepository {
     contentModelSlug: ContentModelSlug,
     contentItem: ContentItem
   ): Promise<void> {
-    const filePath = this.getContentItemFilePath(workspaceSlug, contentModelSlug, contentItem.id);
     const serialized = serialize(contentItem);
-    await writeJsonFile(filePath, serialized, this.config);
+    await writeJsonFile(
+      this.storageFiles.contentModelItemFile(workspaceSlug, contentModelSlug, contentItem.id),
+      serialized,
+      this.config
+    );
   }
 
   async delete(
@@ -217,8 +210,7 @@ export class LocalContentItemRepository implements ContentItemRepository {
     contentModelSlug: ContentModelSlug,
     id: ContentItemIdType
   ): Promise<void> {
-    const filePath = this.getContentItemFilePath(workspaceSlug, contentModelSlug, id);
-    await deleteFile(filePath);
+    await deleteFile(this.storageFiles.contentModelItemFile(workspaceSlug, contentModelSlug, id));
   }
 
   async exists(
@@ -226,8 +218,9 @@ export class LocalContentItemRepository implements ContentItemRepository {
     contentModelSlug: ContentModelSlug,
     id: ContentItemIdType
   ): Promise<boolean> {
-    const filePath = this.getContentItemFilePath(workspaceSlug, contentModelSlug, id);
-    return await fileExists(filePath);
+    return await fileExists(
+      this.storageFiles.contentModelItemFile(workspaceSlug, contentModelSlug, id)
+    );
   }
 
   async existsBySlug(

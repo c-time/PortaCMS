@@ -4,6 +4,7 @@
  * File structure: content-models/{workspaceSlug}/{contentModelSlug}.json
  */
 
+import { join } from 'path';
 import type { ContentModelRepository } from '../../application/ports/ContentModelRepository.js';
 import type {
   ContentModel,
@@ -11,15 +12,15 @@ import type {
   ObjectContentModel,
 } from '../../domain/content-model/entities.js';
 import type { ContentModelSlug, WorkspaceSlug } from '../../domain/shared/entities.js';
-import type { LocalStorageConfig } from './types.js';
-import { DEFAULT_LOCAL_STORAGE_CONFIG, LOCAL_STORAGE_PATHS } from './types.js';
+import type { LocalStorageConfig, StorageFiles } from './types.js';
+import { DEFAULT_LOCAL_STORAGE_CONFIG } from './types.js';
+import { LocalStorageFiles } from './LocalStorageFiles.js';
 import {
   readJsonFile,
   writeJsonFile,
   deleteFile,
   fileExists,
   listFiles,
-  buildPath,
   ensureDirectory,
   serialize,
 } from './utils.js';
@@ -104,27 +105,20 @@ function convertDates(obj: unknown, paths: string[]): unknown {
 
 export class LocalContentModelRepository implements ContentModelRepository {
   private readonly config: LocalStorageConfig;
-  private readonly contentModelsDir: string;
+  private readonly storageFiles: StorageFiles;
 
   constructor(config: Partial<LocalStorageConfig> = {}) {
     this.config = { ...DEFAULT_LOCAL_STORAGE_CONFIG, ...config };
-    this.contentModelsDir = buildPath(this.config.baseDir, LOCAL_STORAGE_PATHS.CONTENT_MODELS);
-  }
-
-  private getWorkspaceDir(workspaceSlug: WorkspaceSlug): string {
-    return buildPath(this.contentModelsDir, workspaceSlug);
-  }
-
-  private getContentModelFilePath(workspaceSlug: WorkspaceSlug, slug: ContentModelSlug): string {
-    return buildPath(this.getWorkspaceDir(workspaceSlug), `${slug}.json`);
+    this.storageFiles = new LocalStorageFiles(this.config.baseDir);
   }
 
   async findBySlug(
     workspaceSlug: WorkspaceSlug,
     slug: ContentModelSlug
   ): Promise<ContentModel | null> {
-    const filePath = this.getContentModelFilePath(workspaceSlug, slug);
-    const data = await readJsonFile<unknown>(filePath);
+    const data = await readJsonFile<unknown>(
+      this.storageFiles.contentModelConfigFile(workspaceSlug, slug)
+    );
 
     if (!data) {
       return null;
@@ -135,18 +129,18 @@ export class LocalContentModelRepository implements ContentModelRepository {
   }
 
   async findAll(workspaceSlug: WorkspaceSlug): Promise<ContentModel[]> {
-    const workspaceDir = this.getWorkspaceDir(workspaceSlug);
+    const contentModelsDir = this.storageFiles.contentModelsDir(workspaceSlug);
 
     if (this.config.autoCreateDirectories) {
-      await ensureDirectory(workspaceDir);
+      await ensureDirectory(contentModelsDir);
     }
 
-    const files = await listFiles(workspaceDir);
+    const files = await listFiles(contentModelsDir);
     const contentModels: ContentModel[] = [];
 
     for (const file of files) {
       if (file.endsWith('.json')) {
-        const filePath = buildPath(workspaceDir, file);
+        const filePath = join(contentModelsDir, file);
         const data = await readJsonFile<unknown>(filePath);
         if (data) {
           const dateFields = getContentModelDateFields(data);
@@ -174,18 +168,19 @@ export class LocalContentModelRepository implements ContentModelRepository {
   }
 
   async save(workspaceSlug: WorkspaceSlug, contentModel: ContentModel): Promise<void> {
-    const filePath = this.getContentModelFilePath(workspaceSlug, contentModel.slug);
     const serialized = serialize(contentModel);
-    await writeJsonFile(filePath, serialized, this.config);
+    await writeJsonFile(
+      this.storageFiles.contentModelConfigFile(workspaceSlug, contentModel.slug),
+      serialized,
+      this.config
+    );
   }
 
   async delete(workspaceSlug: WorkspaceSlug, slug: ContentModelSlug): Promise<void> {
-    const filePath = this.getContentModelFilePath(workspaceSlug, slug);
-    await deleteFile(filePath);
+    await deleteFile(this.storageFiles.contentModelConfigFile(workspaceSlug, slug));
   }
 
   async exists(workspaceSlug: WorkspaceSlug, slug: ContentModelSlug): Promise<boolean> {
-    const filePath = this.getContentModelFilePath(workspaceSlug, slug);
-    return await fileExists(filePath);
+    return await fileExists(this.storageFiles.contentModelConfigFile(workspaceSlug, slug));
   }
 }

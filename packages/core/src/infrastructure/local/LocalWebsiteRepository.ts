@@ -6,14 +6,14 @@
 import type { WebsiteRepository } from '../../application/ports/WebsiteRepository.js';
 import type { Website } from '../../domain/website/entities.js';
 import type { WorkspaceSlug } from '../../domain/shared/entities.js';
-import type { LocalStorageConfig } from './types.js';
-import { DEFAULT_LOCAL_STORAGE_CONFIG, LOCAL_STORAGE_PATHS } from './types.js';
+import type { LocalStorageConfig, StorageFiles } from './types.js';
+import { DEFAULT_LOCAL_STORAGE_CONFIG } from './types.js';
+import { LocalStorageFiles } from './LocalStorageFiles.js';
 import {
   readJsonFile,
   writeJsonFile,
   deleteFile,
   fileExists,
-  buildPath,
   deserialize,
   serialize,
 } from './utils.js';
@@ -31,20 +31,17 @@ interface WebsiteStorageFormat {
 
 export class LocalWebsiteRepository implements WebsiteRepository {
   private readonly config: LocalStorageConfig;
-  private readonly websitesDir: string;
+  private readonly storageFiles: StorageFiles;
 
   constructor(config: Partial<LocalStorageConfig> = {}) {
     this.config = { ...DEFAULT_LOCAL_STORAGE_CONFIG, ...config };
-    this.websitesDir = buildPath(this.config.baseDir, LOCAL_STORAGE_PATHS.WEBSITES);
-  }
-
-  private getWebsiteFilePath(workspaceSlug: WorkspaceSlug): string {
-    return buildPath(this.websitesDir, `${workspaceSlug}.json`);
+    this.storageFiles = new LocalStorageFiles(this.config.baseDir);
   }
 
   async findByWorkspace(workspaceSlug: WorkspaceSlug): Promise<Website | null> {
-    const filePath = this.getWebsiteFilePath(workspaceSlug);
-    const data = await readJsonFile<WebsiteStorageFormat>(filePath);
+    const data = await readJsonFile<WebsiteStorageFormat>(
+      this.storageFiles.websiteConfigFile(workspaceSlug)
+    );
 
     if (!data) {
       return null;
@@ -54,18 +51,15 @@ export class LocalWebsiteRepository implements WebsiteRepository {
   }
 
   async save(workspaceSlug: WorkspaceSlug, website: Website): Promise<void> {
-    const filePath = this.getWebsiteFilePath(workspaceSlug);
     const serialized = serialize(website);
-    await writeJsonFile(filePath, serialized, this.config);
+    await writeJsonFile(this.storageFiles.websiteConfigFile(workspaceSlug), serialized, this.config);
   }
 
   async delete(workspaceSlug: WorkspaceSlug): Promise<void> {
-    const filePath = this.getWebsiteFilePath(workspaceSlug);
-    await deleteFile(filePath);
+    await deleteFile(this.storageFiles.websiteConfigFile(workspaceSlug));
   }
 
   async exists(workspaceSlug: WorkspaceSlug): Promise<boolean> {
-    const filePath = this.getWebsiteFilePath(workspaceSlug);
-    return await fileExists(filePath);
+    return await fileExists(this.storageFiles.websiteConfigFile(workspaceSlug));
   }
 }
