@@ -1,4 +1,5 @@
 import { ContentListViewSlug, ContentModelSlug, WorkspaceSlug } from "../../domain/shared/entities.js";
+import type { ContentItemIdType } from "../../application/ports/ContentItemRepository.js";
 
 /**
  * Local file-based infrastructure types
@@ -31,22 +32,42 @@ export interface LocalStorageConfig {
 
 
 export interface StorageFiles {
+  // Project level
   projectConfigFile: () => string;
+
+  // Media
   mediaDir: () => string;
+
+  // Workspaces
   workspacesDir: () => string;
   workspaceConfigFile: (workspaceSlug: WorkspaceSlug) => string;
-  websiteConfigFile: (workspaceSlug: WorkspaceSlug) => string;
-  contentModelsDir: (workspaceSlug: WorkspaceSlug) => string;
 
+  // Website
+  websiteConfigFile: (workspaceSlug: WorkspaceSlug) => string;
+
+  // Content Models - returns: workspaces/{workspaceSlug}/contents/
+  contentModelsDir: (workspaceSlug: WorkspaceSlug) => string;
+  // Content Model - returns: workspaces/{workspaceSlug}/contents/{contentModelSlug}/
   contentModelDir: (workspaceSlug: WorkspaceSlug, contentModelSlug: ContentModelSlug) => string;
   contentModelConfigFile: (workspaceSlug: WorkspaceSlug, contentModelSlug: ContentModelSlug) => string;
 
+  // Content List Views
   contentModelViewsDir: (workspaceSlug: WorkspaceSlug, contentModelSlug: ContentModelSlug) => string;
-  contentModelViewConfigFile: (workspaceSlug: WorkspaceSlug, contentModelSlug: ContentModelSlug, contentListViewSlug: ContentListViewSlug) => string;
+  contentModelViewConfigFile: (
+    workspaceSlug: WorkspaceSlug,
+    contentModelSlug: ContentModelSlug,
+    contentListViewSlug: ContentListViewSlug
+  ) => string;
 
+  // Content Items
   contentModelItemsDir: (workspaceSlug: WorkspaceSlug, contentModelSlug: ContentModelSlug) => string;
-  contentModelItemFile: (workspaceSlug: WorkspaceSlug, contentModelSlug: ContentModelSlug) => string;
+  contentModelItemFile: (
+    workspaceSlug: WorkspaceSlug,
+    contentModelSlug: ContentModelSlug,
+    itemId: ContentItemIdType
+  ) => string;
 
+  // Page Content Views
   pageContentViewsDir: (workspaceSlug: WorkspaceSlug) => string;
 }
 
