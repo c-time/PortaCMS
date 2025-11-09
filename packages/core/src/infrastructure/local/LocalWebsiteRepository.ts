@@ -7,8 +7,6 @@ import type { WebsiteRepository } from '../../application/ports/WebsiteRepositor
 import type { Website } from '../../domain/website/entities.js';
 import type { WorkspaceSlug } from '../../domain/shared/entities.js';
 import type { LocalStorageConfig, StorageFiles } from './types.js';
-import { DEFAULT_LOCAL_STORAGE_CONFIG } from './types.js';
-import { LocalStorageFiles } from './LocalStorageFiles.js';
 import {
   readJsonFile,
   writeJsonFile,
@@ -30,13 +28,10 @@ interface WebsiteStorageFormat {
 }
 
 export class LocalWebsiteRepository implements WebsiteRepository {
-  private readonly config: LocalStorageConfig;
-  private readonly storageFiles: StorageFiles;
-
-  constructor(config: Partial<LocalStorageConfig> = {}) {
-    this.config = { ...DEFAULT_LOCAL_STORAGE_CONFIG, ...config };
-    this.storageFiles = new LocalStorageFiles(this.config.baseDir);
-  }
+  constructor(
+    private readonly storageFiles: StorageFiles,
+    private readonly config: LocalStorageConfig
+  ) {}
 
   async findByWorkspace(workspaceSlug: WorkspaceSlug): Promise<Website | null> {
     const data = await readJsonFile<WebsiteStorageFormat>(

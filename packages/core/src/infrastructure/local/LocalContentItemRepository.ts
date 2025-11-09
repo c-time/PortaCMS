@@ -13,8 +13,6 @@ import type {
 import type { ContentItem } from '../../domain/content-item/entities.js';
 import type { ContentModelSlug, ContentItemSlug, WorkspaceSlug } from '../../domain/shared/entities.js';
 import type { LocalStorageConfig, StorageFiles } from './types.js';
-import { DEFAULT_LOCAL_STORAGE_CONFIG } from './types.js';
-import { LocalStorageFiles } from './LocalStorageFiles.js';
 import {
   readJsonFile,
   writeJsonFile,
@@ -29,13 +27,10 @@ import {
 const DATE_FIELDS = ['createdAt', 'updatedAt', 'publishedAt', 'expiresAt'];
 
 export class LocalContentItemRepository implements ContentItemRepository {
-  private readonly config: LocalStorageConfig;
-  private readonly storageFiles: StorageFiles;
-
-  constructor(config: Partial<LocalStorageConfig> = {}) {
-    this.config = { ...DEFAULT_LOCAL_STORAGE_CONFIG, ...config };
-    this.storageFiles = new LocalStorageFiles(this.config.baseDir);
-  }
+  constructor(
+    private readonly storageFiles: StorageFiles,
+    private readonly config: LocalStorageConfig
+  ) {}
 
   async findById(
     workspaceSlug: WorkspaceSlug,

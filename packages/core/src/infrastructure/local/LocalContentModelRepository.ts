@@ -13,8 +13,6 @@ import type {
 } from '../../domain/content-model/entities.js';
 import type { ContentModelSlug, WorkspaceSlug } from '../../domain/shared/entities.js';
 import type { LocalStorageConfig, StorageFiles } from './types.js';
-import { DEFAULT_LOCAL_STORAGE_CONFIG } from './types.js';
-import { LocalStorageFiles } from './LocalStorageFiles.js';
 import {
   readJsonFile,
   writeJsonFile,
@@ -104,13 +102,10 @@ function convertDates(obj: unknown, paths: string[]): unknown {
 }
 
 export class LocalContentModelRepository implements ContentModelRepository {
-  private readonly config: LocalStorageConfig;
-  private readonly storageFiles: StorageFiles;
-
-  constructor(config: Partial<LocalStorageConfig> = {}) {
-    this.config = { ...DEFAULT_LOCAL_STORAGE_CONFIG, ...config };
-    this.storageFiles = new LocalStorageFiles(this.config.baseDir);
-  }
+  constructor(
+    private readonly storageFiles: StorageFiles,
+    private readonly config: LocalStorageConfig
+  ) {}
 
   async findBySlug(
     workspaceSlug: WorkspaceSlug,

@@ -1,27 +1,27 @@
 /**
- * Implementation of StorageFiles interface for local file-based storage
- * Provides path resolution for all storage locations
+ * Test helpers for local infrastructure tests
+ * Provides mock implementations and utilities for testing
  */
 
 import { join } from 'path';
-import type { StorageFiles } from './types.js';
+import type { StorageFiles, LocalStorageConfig } from './types.js';
 import type { WorkspaceSlug, ContentModelSlug, ContentListViewSlug } from '../../domain/shared/entities.js';
 import type { ContentItemIdType } from '../../application/ports/ContentItemRepository.js';
 
-export class LocalStorageFiles implements StorageFiles {
+/**
+ * Creates a simple StorageFiles implementation for testing
+ */
+export class TestStorageFiles implements StorageFiles {
   constructor(private readonly baseDir: string) {}
 
-  // Project level
   projectConfigFile(): string {
     return join(this.baseDir, 'project.json');
   }
 
-  // Media
   mediaDir(): string {
     return join(this.baseDir, 'media');
   }
 
-  // Workspaces
   workspacesDir(): string {
     return join(this.baseDir, 'workspaces');
   }
@@ -30,17 +30,14 @@ export class LocalStorageFiles implements StorageFiles {
     return join(this.workspacesDir(), `${workspaceSlug}.json`);
   }
 
-  // Website
   websiteConfigFile(workspaceSlug: WorkspaceSlug): string {
     return join(this.baseDir, 'websites', `${workspaceSlug}.json`);
   }
 
-  // Content Models - returns: workspaces/{workspaceSlug}/contents/
   contentModelsDir(workspaceSlug: WorkspaceSlug): string {
     return join(this.baseDir, 'content-models', workspaceSlug);
   }
 
-  // Content Model - returns: workspaces/{workspaceSlug}/contents/{contentModelSlug}/
   contentModelDir(workspaceSlug: WorkspaceSlug, contentModelSlug: ContentModelSlug): string {
     return join(this.contentModelsDir(workspaceSlug), contentModelSlug);
   }
@@ -49,7 +46,6 @@ export class LocalStorageFiles implements StorageFiles {
     return join(this.contentModelsDir(workspaceSlug), `${contentModelSlug}.json`);
   }
 
-  // Content List Views
   contentModelViewsDir(workspaceSlug: WorkspaceSlug, contentModelSlug: ContentModelSlug): string {
     return join(this.contentModelDir(workspaceSlug, contentModelSlug), 'views');
   }
@@ -62,7 +58,6 @@ export class LocalStorageFiles implements StorageFiles {
     return join(this.contentModelViewsDir(workspaceSlug, contentModelSlug), `${contentListViewSlug}.json`);
   }
 
-  // Content Items
   contentModelItemsDir(workspaceSlug: WorkspaceSlug, contentModelSlug: ContentModelSlug): string {
     return join(this.baseDir, 'content-items', workspaceSlug, contentModelSlug);
   }
@@ -75,8 +70,18 @@ export class LocalStorageFiles implements StorageFiles {
     return join(this.contentModelItemsDir(workspaceSlug, contentModelSlug), `${itemId}.json`);
   }
 
-  // Page Content Views
   pageContentViewsDir(workspaceSlug: WorkspaceSlug): string {
     return join(this.baseDir, 'page-content-views', workspaceSlug);
   }
+}
+
+/**
+ * Creates a test configuration
+ */
+export function createTestConfig(baseDir: string): LocalStorageConfig {
+  return {
+    baseDir,
+    autoCreateDirectories: true,
+    prettyPrint: true,
+  };
 }

@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import { LocalContentItemRepository } from './LocalContentItemRepository.js';
+import { TestStorageFiles, createTestConfig } from './test-helpers.js';
 import type { ContentItem } from '../../domain/content-item/entities.js';
 import type { WorkspaceSlug, ContentModelSlug, ContentItemSlug } from '../../domain/shared/entities.js';
 import type { ContentItemIdType } from '../../application/ports/ContentItemRepository.js';
@@ -24,9 +25,9 @@ describe('LocalContentItemRepository', () => {
       // Ignore if directory doesn't exist
     }
 
-    repository = new LocalContentItemRepository({
-      baseDir: TEST_BASE_DIR,
-    });
+    const storageFiles = new TestStorageFiles(TEST_BASE_DIR);
+    const config = createTestConfig(TEST_BASE_DIR);
+    repository = new LocalContentItemRepository(storageFiles, config);
   });
 
   afterEach(async () => {

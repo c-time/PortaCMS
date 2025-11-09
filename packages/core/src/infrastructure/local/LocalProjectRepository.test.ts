@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import { LocalProjectRepository } from './LocalProjectRepository.js';
+import { TestStorageFiles, createTestConfig } from './test-helpers.js';
 import type { Project } from '../../domain/workspace/entities.js';
 import type { WorkspaceSlug } from '../../domain/shared/entities.js';
 
@@ -22,9 +23,9 @@ describe('LocalProjectRepository', () => {
       // Ignore if directory doesn't exist
     }
 
-    repository = new LocalProjectRepository({
-      baseDir: TEST_BASE_DIR,
-    });
+    const storageFiles = new TestStorageFiles(TEST_BASE_DIR);
+    const config = createTestConfig(TEST_BASE_DIR);
+    repository = new LocalProjectRepository(storageFiles, config);
   });
 
   afterEach(async () => {
