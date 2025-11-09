@@ -8,7 +8,7 @@ import { join } from 'path';
 import { LocalContentItemRepository } from './LocalContentItemRepository.js';
 import { TestStorageFiles, createTestConfig } from './test-helpers.js';
 import type { ContentItem } from '../../domain/content-item/entities.js';
-import type { WorkspaceSlug, ContentModelSlug, ContentItemSlug } from '../../domain/shared/entities.js';
+import type { WorkspaceSlug, ContentModelSlug, ContentItemSlug, FieldSlug } from '../../domain/shared/entities.js';
 import type { ContentItemIdType } from '../../application/ports/ContentItemRepository.js';
 
 const TEST_BASE_DIR = join(process.cwd(), 'test-data', 'content-item-repo');
@@ -43,7 +43,7 @@ describe('LocalContentItemRepository', () => {
     slug: slug as ContentItemSlug,
     fields: [
       {
-        slug: 'title' as ContentItemSlug,
+        slug: 'title' as FieldSlug,
         value: ['Test Article'],
         schema: { type: 'String' },
       },
@@ -309,11 +309,11 @@ describe('LocalContentItemRepository', () => {
       const item = createTestContentItem('item-1', 'test-article');
       await repository.save(workspaceSlug, contentModelSlug, item);
 
-      const updatedItem = {
+      const updatedItem : ContentItem = {
         ...item,
         fields: [
           {
-            slug: 'title' as ContentItemSlug,
+            slug: 'title' as FieldSlug,
             value: ['Updated Title'],
             schema: { type: 'String' },
           },
