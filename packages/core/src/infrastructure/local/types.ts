@@ -1,3 +1,5 @@
+import { ContentListViewSlug, ContentModelSlug, WorkspaceSlug } from "../../domain/shared/entities.js";
+
 /**
  * Local file-based infrastructure types
  * Defines configuration and storage structure for local repositories
@@ -24,6 +26,28 @@ export interface LocalStorageConfig {
    * Default: true (for better readability during development)
    */
   prettyPrint?: boolean;
+}
+
+
+
+export interface StorageFiles {
+  projectConfigFile: () => string;
+  mediaDir: () => string;
+  workspacesDir: () => string;
+  workspaceConfigFile: (workspaceSlug: WorkspaceSlug) => string;
+  websiteConfigFile: (workspaceSlug: WorkspaceSlug) => string;
+  contentModelsDir: (workspaceSlug: WorkspaceSlug) => string;
+
+  contentModelDir: (workspaceSlug: WorkspaceSlug, contentModelSlug: ContentModelSlug) => string;
+  contentModelConfigFile: (workspaceSlug: WorkspaceSlug, contentModelSlug: ContentModelSlug) => string;
+
+  contentModelViewsDir: (workspaceSlug: WorkspaceSlug, contentModelSlug: ContentModelSlug) => string;
+  contentModelViewConfigFile: (workspaceSlug: WorkspaceSlug, contentModelSlug: ContentModelSlug, contentListViewSlug: ContentListViewSlug) => string;
+
+  contentModelItemsDir: (workspaceSlug: WorkspaceSlug, contentModelSlug: ContentModelSlug) => string;
+  contentModelItemFile: (workspaceSlug: WorkspaceSlug, contentModelSlug: ContentModelSlug) => string;
+
+  pageContentViewsDir: (workspaceSlug: WorkspaceSlug) => string;
 }
 
 /**
