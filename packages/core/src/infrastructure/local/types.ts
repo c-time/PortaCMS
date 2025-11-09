@@ -70,23 +70,3 @@ export interface StorageFiles {
   // Page Content Views
   pageContentViewsDir: (workspaceSlug: WorkspaceSlug) => string;
 }
-
-/**
- * Default configuration for local storage
- */
-export const DEFAULT_LOCAL_STORAGE_CONFIG: LocalStorageConfig = {
-  baseDir: './data',
-  autoCreateDirectories: true,
-  prettyPrint: true,
-};
-
-/**
- * File paths structure for organizing data
- */
-export const LOCAL_STORAGE_PATHS = {
-  PROJECT: 'project.json',
-  WORKSPACES: 'workspaces',
-  WEBSITES: 'websites',
-  CONTENT_MODELS: 'content-models',
-  CONTENT_ITEMS: 'content-items',
-} as const;
