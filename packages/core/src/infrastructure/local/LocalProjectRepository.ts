@@ -19,7 +19,12 @@ export class LocalProjectRepository implements ProjectRepository {
   }
 
   async save(project: Project): Promise<void> {
-    await writeJsonFile(this.storageFiles.projectConfigFile(), project, this.config);
+    await writeJsonFile(
+      this.storageFiles.projectConfigFile(),
+      project,
+      this.config.prettyPrint,
+      this.config.autoCreateDirectories
+    );
   }
 
   async exists(): Promise<boolean> {

@@ -196,7 +196,8 @@ export class LocalContentItemRepository implements ContentItemRepository {
     await writeJsonFile(
       this.storageFiles.contentModelItemFile(workspaceSlug, contentModelSlug, contentItem.id),
       serialized,
-      this.config
+      this.config.prettyPrint,
+      this.config.autoCreateDirectories
     );
   }
 

@@ -47,7 +47,12 @@ export class LocalWebsiteRepository implements WebsiteRepository {
 
   async save(workspaceSlug: WorkspaceSlug, website: Website): Promise<void> {
     const serialized = serialize(website);
-    await writeJsonFile(this.storageFiles.websiteConfigFile(workspaceSlug), serialized, this.config);
+    await writeJsonFile(
+      this.storageFiles.websiteConfigFile(workspaceSlug),
+      serialized,
+      this.config.prettyPrint,
+      this.config.autoCreateDirectories
+    );
   }
 
   async delete(workspaceSlug: WorkspaceSlug): Promise<void> {

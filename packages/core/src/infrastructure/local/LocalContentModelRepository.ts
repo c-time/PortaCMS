@@ -167,7 +167,8 @@ export class LocalContentModelRepository implements ContentModelRepository {
     await writeJsonFile(
       this.storageFiles.contentModelConfigFile(workspaceSlug, contentModel.slug),
       serialized,
-      this.config
+      this.config.prettyPrint,
+      this.config.autoCreateDirectories
     );
   }
 

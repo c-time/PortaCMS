@@ -51,7 +51,12 @@ export class LocalWorkspaceRepository implements WorkspaceRepository {
   }
 
   async save(workspace: Workspace): Promise<void> {
-    await writeJsonFile(this.storageFiles.workspaceConfigFile(workspace.slug), workspace, this.config);
+    await writeJsonFile(
+      this.storageFiles.workspaceConfigFile(workspace.slug),
+      workspace,
+      this.config.prettyPrint,
+      this.config.autoCreateDirectories
+    );
   }
 
   async delete(slug: WorkspaceSlug): Promise<void> {

@@ -5,7 +5,6 @@
 
 import { promises as fs } from 'fs';
 import { join, dirname } from 'path';
-import type { LocalStorageConfig } from './types.js';
 
 /**
  * Ensures that a directory exists, creating it if necessary
@@ -35,17 +34,22 @@ export async function readJsonFile<T>(filePath: string): Promise<T | null> {
 
 /**
  * Writes data to a JSON file
+ * @param filePath - Path to the file
+ * @param data - Data to write
+ * @param prettyPrint - Whether to format JSON with indentation (default: true)
+ * @param autoCreateDirectories - Whether to create parent directories if they don't exist (default: true)
  */
 export async function writeJsonFile<T>(
   filePath: string,
   data: T,
-  config: LocalStorageConfig
+  prettyPrint: boolean = true,
+  autoCreateDirectories: boolean = true
 ): Promise<void> {
-  if (config.autoCreateDirectories) {
+  if (autoCreateDirectories) {
     await ensureDirectory(dirname(filePath));
   }
 
-  const content = config.prettyPrint
+  const content = prettyPrint
     ? JSON.stringify(data, null, 2)
     : JSON.stringify(data);
 
