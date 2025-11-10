@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { WorkspaceId, ContentItemId } from './ids.js';
+import { WorkspaceId, ContentItemId } from '../ids.js';
 
 describe('WorkspaceId', () => {
   it('should accept valid UUID', () => {
