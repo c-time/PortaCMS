@@ -5,7 +5,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { promises as fs } from 'fs';
 import { join } from 'path';
-import { LocalContentItemRepository } from './LocalContentItemRepository.js';
+import { LocalContentItemRepository } from '../LocalContentItemRepository.js';
 import { TestStorageFiles, createTestConfig } from './test-helpers.js';
 import type { ContentItem } from '../../domain/content-item/entities.js';
 import type { WorkspaceSlug, ContentModelSlug, ContentItemSlug, FieldSlug } from '../../domain/shared/entities.js';
