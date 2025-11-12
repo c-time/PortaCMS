@@ -1,4 +1,4 @@
-import { Project } from '../../domain/workspace/entities.js';
+import { Project } from '../../domain/project/entities.js';
 
 /**
  * Repository interface for Project aggregate root
