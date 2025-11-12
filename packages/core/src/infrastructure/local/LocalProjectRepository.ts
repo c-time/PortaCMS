@@ -4,7 +4,7 @@
  */
 
 import type { ProjectRepository } from '../../application/ports/ProjectRepository.js';
-import type { Project } from '../../domain/workspace/entities.js';
+import type { Project } from '../../domain/project/entities.js';
 import type { LocalStorageConfig, StorageFiles } from './types.js';
 import { readJsonFile, writeJsonFile, fileExists } from './utils.js';
 

@@ -1,5 +1,8 @@
 // Domain exports
+export * from './domain/project/entities.js';
+export * from './domain/project/commands.js';
 export * from './domain/workspace/entities.js';
+export * from './domain/workspace/commands.js';
 export * from './domain/website/entities.js';
 export * from './domain/content-model/entities.js';
 export * from './domain/content-item/entities.js';
