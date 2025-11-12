@@ -16,5 +16,8 @@ export * from './application/ports/WebsiteRepository.js';
 export * from './application/ports/ContentModelRepository.js';
 export * from './application/ports/ContentItemRepository.js';
 
+// Application use cases exports
+export * from './application/use-cases/workspace/CreateWorkspaceUseCase.js';
+
 // Infrastructure exports
 export * from './infrastructure/local/index.js';
