@@ -4,7 +4,7 @@
  */
 
 import { join } from 'path';
-import type { WorkspaceRepository } from '../../application/ports/WorkspaceRepository.js';
+import type { WorkspaceRepository } from '../../application/driven-ports/WorkspaceRepository.js';
 import type { Workspace } from '../../domain/workspace/entities.js';
 import type { WorkspaceSlug } from '../../domain/shared/entities.js';
 import type { LocalStorageConfig, StorageFiles } from './types.js';

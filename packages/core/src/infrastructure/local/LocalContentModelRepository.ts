@@ -5,7 +5,7 @@
  */
 
 import { join } from 'path';
-import type { ContentModelRepository } from '../../application/ports/ContentModelRepository.js';
+import type { ContentModelRepository } from '../../application/driven-ports/ContentModelRepository.js';
 import type {
   ContentModel,
   ListContentModel,
