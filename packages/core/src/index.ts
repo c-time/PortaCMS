@@ -17,6 +17,7 @@ export * from './application/ports/ContentModelRepository.js';
 export * from './application/ports/ContentItemRepository.js';
 
 // Application use cases exports
+export * from './application/use-cases/workspace/CreateWorkspaceUseCasePort.js';
 export * from './application/use-cases/workspace/CreateWorkspaceUseCase.js';
 
 // Infrastructure exports

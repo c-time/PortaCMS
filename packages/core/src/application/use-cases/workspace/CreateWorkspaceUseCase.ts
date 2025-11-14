@@ -1,47 +1,15 @@
-import { z } from 'zod';
-import { WorkspaceSlugSchema } from '../../../domain/shared/entities.js';
 import { createWorkspace } from '../../../domain/workspace/commands.js';
 import { addWorkspaceToProject, WorkspaceAlreadyExistsError } from '../../../domain/project/commands.js';
 import { WorkspaceRepository } from '../../ports/WorkspaceRepository.js';
 import { ProjectRepository } from '../../ports/ProjectRepository.js';
 import { ProjectSchema } from '../../../domain/project/entities.js';
-
-// ========================================
-// Input/Output Schemas
-// ========================================
-
-export const CreateWorkspaceInputSchema = z.object({
-  slug: WorkspaceSlugSchema,
-});
-
-export type CreateWorkspaceInput = z.infer<typeof CreateWorkspaceInputSchema>;
-
-export const CreateWorkspaceOutputSchema = z.object({
-  workspace: z.object({
-    slug: WorkspaceSlugSchema,
-  }),
-});
-
-export type CreateWorkspaceOutput = z.infer<typeof CreateWorkspaceOutputSchema>;
-
-// ========================================
-// Driver Port (Primary Port)
-// ========================================
-
-/**
- * Driver port for creating a new workspace
- * Defines the contract for workspace creation use case
- */
-export interface CreateWorkspaceUseCasePort {
-  /**
-   * Executes the create workspace use case
-   *
-   * @param input - The workspace creation parameters
-   * @returns The created workspace
-   * @throws {WorkspaceAlreadyExistsError} If a workspace with the same slug already exists
-   */
-  execute(input: CreateWorkspaceInput): Promise<CreateWorkspaceOutput>;
-}
+import {
+  CreateWorkspaceUseCasePort,
+  CreateWorkspaceInput,
+  CreateWorkspaceOutput,
+  CreateWorkspaceInputSchema,
+  CreateWorkspaceOutputSchema,
+} from './CreateWorkspaceUseCasePort.js';
 
 // ========================================
 // Use Case Implementation
