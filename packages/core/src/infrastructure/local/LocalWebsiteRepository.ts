@@ -3,7 +3,7 @@
  * Stores website configurations per workspace in the websites directory
  */
 
-import type { WebsiteRepository } from '../../application/ports/WebsiteRepository.js';
+import type { WebsiteRepository } from '../../application/driven-ports/WebsiteRepository.js';
 import type { Website } from '../../domain/website/entities.js';
 import type { WorkspaceSlug } from '../../domain/shared/entities.js';
 import type { LocalStorageConfig, StorageFiles } from './types.js';

@@ -4,9 +4,9 @@
  */
 
 import { join } from 'path';
-import type { StorageFiles, LocalStorageConfig } from './types.js';
-import type { WorkspaceSlug, ContentModelSlug, ContentListViewSlug } from '../../domain/shared/entities.js';
-import type { ContentItemIdType } from '../../application/ports/ContentItemRepository.js';
+import type { StorageFiles, LocalStorageConfig } from '../types.js';
+import type { WorkspaceSlug, ContentModelSlug, ContentListViewSlug } from '../../../domain/shared/entities.js';
+import type { ContentItemIdType } from '../../../application/driven-ports/ContentItemRepository.js';
 
 /**
  * Creates a simple StorageFiles implementation for testing

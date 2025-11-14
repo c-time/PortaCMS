@@ -3,7 +3,7 @@
  * Stores project data in a single JSON file
  */
 
-import type { ProjectRepository } from '../../application/ports/ProjectRepository.js';
+import type { ProjectRepository } from '../../application/driven-ports/ProjectRepository.js';
 import type { Project } from '../../domain/project/entities.js';
 import type { LocalStorageConfig, StorageFiles } from './types.js';
 import { readJsonFile, writeJsonFile, fileExists } from './utils.js';

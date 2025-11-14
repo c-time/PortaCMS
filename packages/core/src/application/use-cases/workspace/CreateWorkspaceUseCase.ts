@@ -1,7 +1,7 @@
 import { createWorkspace } from '../../../domain/workspace/commands.js';
 import { addWorkspaceToProject, WorkspaceAlreadyExistsError } from '../../../domain/project/commands.js';
-import { WorkspaceRepository } from '../../ports/WorkspaceRepository.js';
-import { ProjectRepository } from '../../ports/ProjectRepository.js';
+import { WorkspaceRepository } from '../../driven-ports/WorkspaceRepository.js';
+import { ProjectRepository } from '../../driven-ports/ProjectRepository.js';
 import { ProjectSchema } from '../../../domain/project/entities.js';
 import {
   CreateWorkspaceUseCasePort,
@@ -9,7 +9,7 @@ import {
   CreateWorkspaceOutput,
   CreateWorkspaceInputSchema,
   CreateWorkspaceOutputSchema,
-} from './CreateWorkspaceUseCasePort.js';
+} from '../../driver-ports/workspace/CreateWorkspaceUseCasePort.js';
 
 // ========================================
 // Use Case Implementation

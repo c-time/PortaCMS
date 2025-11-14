@@ -1,5 +1,5 @@
 import { ContentListViewSlug, ContentModelSlug, WorkspaceSlug } from "../../domain/shared/entities.js";
-import type { ContentItemIdType } from "../../application/ports/ContentItemRepository.js";
+import type { ContentItemIdType } from "../../application/driven-ports/ContentItemRepository.js";
 
 /**
  * Local file-based infrastructure types

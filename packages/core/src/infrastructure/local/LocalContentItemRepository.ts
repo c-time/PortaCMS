@@ -9,7 +9,7 @@ import type {
   ContentItemRepository,
   ContentItemQueryOptions,
   ContentItemIdType,
-} from '../../application/ports/ContentItemRepository.js';
+} from '../../application/driven-ports/ContentItemRepository.js';
 import type { ContentItem } from '../../domain/content-item/entities.js';
 import type { ContentModelSlug, ContentItemSlug, WorkspaceSlug } from '../../domain/shared/entities.js';
 import type { LocalStorageConfig, StorageFiles } from './types.js';

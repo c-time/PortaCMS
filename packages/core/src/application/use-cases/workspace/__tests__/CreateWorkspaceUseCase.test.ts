@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CreateWorkspaceUseCase } from '../CreateWorkspaceUseCase.js';
-import { WorkspaceRepository } from '../../../ports/WorkspaceRepository.js';
-import { ProjectRepository } from '../../../ports/ProjectRepository.js';
+import { WorkspaceRepository } from '../../../driven-ports/WorkspaceRepository.js';
+import { ProjectRepository } from '../../../driven-ports/ProjectRepository.js';
 import { Workspace } from '../../../../domain/workspace/entities.js';
 import { Project } from '../../../../domain/project/entities.js';
 import { WorkspaceSlug } from '../../../../domain/shared/entities.js';
