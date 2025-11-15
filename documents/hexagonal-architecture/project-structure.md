@@ -23,26 +23,15 @@ app/
     │   │   └── queries.ts  # すべてのQuery（Read操作の純粋関数）
     │   ├── {Aggregate2}/
     │   └── usecases/       # UseCase（Aggregateをまたぐワークフロー）
-    ├── application/    # Application層（Facade実装）
-    │   ├── ports/      # Portインターフェース（Repository等）
-    │   ├── facades/    # Facade実装（Presentation層のインターフェースを実装）
+    ├── application/    # Application層
+    │   ├── usecases/   # UseCase実装（driver-portsの実装）
+    │   ├── driver-ports/   # Driver Portインターフェース（外部からの入力を受ける）
+    │   ├── driven-ports/   # Driven Portインターフェース（外部システムへの出力）
     │   └── index.ts    # Application クラス
     ├── infrastructure/ # 外部システムとの接続
     │   └── {data store type e.g. firestore}/
     │       ├── schemas/  # データベーススキーマ
-    │       └── adapters/ # port の実装
-    ├── presentation/   # UI
-    │   ├── facades/          # Facadeインターフェース（Presentation層が定義）
-    │   ├── App.tsx           # Application Component（ApplicationContextに依存）
-    │   ├── ErrorBoundary.tsx # エラーハンドリング
-    │   ├── Router.tsx        # ルーティング
-    │   ├── {XXXPage}.tsx     # ページコンポーネント（ルート直下、Propsなし）
-    │   └── compoundComponents/ # Compound Components
-    │       └── {ComponentName}/
-    │           ├── index.tsx    # メインコンポーネント（状態管理 + 子供への受け渡し）
-    │           ├── adapter.ts   # Application Adapter（hooks）
-    │           ├── model.ts     # View Model（型定義）
-    │           └── {ChildComponent}.tsx # Child Component（表示専用）
+    │       └── adapters/ # driven-portsの実装（Repository等）
     └── bootstrap/      # 依存性注入専用層
         ├── DIContainer.ts       # DI Container
         ├── ApplicationContext.tsx # React Context
@@ -73,23 +62,17 @@ app/
 * **意図:** 名前から責務・粒度を推測できるようにし、探索コストと認知負荷を下げます。
 * **命名表:**
 
-| 役割             | 接尾辞（例）                          | ファイル名サンプル                  |
-| :------------- | :------------------------------ | :------------------------- |
-| エンティティ         | （なし）                            | `Project.ts`, `User.ts`    |
-| エンティティサブセット    | `Summary`, `Detail` など          | `ProjectSummary.ts`        |
-| Commands       | `Command`                       | `ArchiveProjectCommand.ts` |
-| Query          | `Query`                         | `CalculateProjectCostQuery.ts` |
-| ユースケース         | `UseCase`                       | `ArchiveProjectUseCase.ts` |
-| ポート（リポジトリ等）    | `Repository`, `Port`            | `ProjectRepository.ts`, `ClockPort.ts` |
-| アダプター          | `Adapter`                       | `ProjectRepositoryAdapter.ts` |
-| スキーマ           | `Schema`, `DocSchema`           | `ProjectDocSchema.ts`      |
-| Facade         | `Facade`, `FacadeImpl`          | `ProjectFacade.ts`, `ProjectFacadeImpl.ts` |
-| Compound Component | （フォルダ名）                      | `ProjectCard/index.tsx`          |
-| View Model     | `model.ts`                      | `ProjectCard/model.ts` |
-| Adapter        | `adapter.ts`                    | `ProjectCard/adapter.ts` |
-| Child Component | （なし）                           | `ProjectCardHeader.tsx` |
-| Page コンポーネント | `Page`                           | `ProjectListPage.tsx` |
-| Application Component | （なし）                       | `App.tsx`, `Router.tsx` |
+| 役割             | 接尾辞（Suffix）                 | 接頭辞（Prefix）          | ファイル名サンプル                  |
+| :------------- | :------------------------------ | :-------------------- | :------------------------- |
+| エンティティ         | （なし）                            | -                     | `Project.ts`, `User.ts`    |
+| エンティティサブセット    | `Summary`, `Detail` など          | -                     | `ProjectSummary.ts`        |
+| Commands       | `Command`                       | -                     | `ArchiveProjectCommand.ts` |
+| Query          | `Query`                         | -                     | `CalculateProjectCostQuery.ts` |
+| ユースケース         | `UseCase`                       | -                     | `ArchiveProjectUseCase.ts` |
+| Driver Port    | `DriverPort`, `UseCase`         | -                     | `CreateProjectDriverPort.ts` |
+| Driven Port    | `Repository`, `Port`            | -                     | `ProjectRepository.ts`, `ClockPort.ts` |
+| アダプター (Driven Port実装) | `Repository`, `Port`      | `{DataStoreType}`     | `FirestoreProjectRepository.ts`, `InMemoryUserRepository.ts` |
+| スキーマ           | `Schema`, `DocSchema`           | -                     | `ProjectDocSchema.ts`      |
 
 * **補足規約:**
 
