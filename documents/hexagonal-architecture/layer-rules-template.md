@@ -301,6 +301,51 @@ export function createExample(input: ExampleInput): Example {
 - カッコ内に正しいやり方を記述
 - そのルールに直接関連する具体的な例を示す
 
+### サンプルコードの運用ルール（DRY 原則）
+
+複数のルールセクションで同じコードを繰り返し掲載しないよう、以下の方針でサンプルコードを運用します。
+
+1. **フルコードは X.2 に集約する**
+   - 各レイヤーで「フル実装（全体像）」を載せてよいのは、原則として `X.2. サンプルコード（全体像）` セクションのみとする。
+   - Driver/Driven Port や UseCase など、複数のルールで参照されるクラス・インターフェースは、X.2 に完全な形でまとめて掲載する。
+
+2. **ルールセクションでは「参照＋短い抜粋」にとどめる**
+   - `X.3` 以降の各ルールでは、次のスタイルを基本とする。
+     - 「**該当サンプル**」には、**ファイルパスの列挙と、X.2 内の該当小見出しへのリンク**を書く。
+     - 必要に応じて、責務や依存関係が分かる**短い抜粋（3〜10 行程度）**だけ載せる。
+   - 例:
+     ```md
+     * **該当サンプル:**
+       * `application/usecases/ArchiveProjectUseCase.ts`  
+         詳細な実装は「[UseCase実装（Application層）](#usecase実装application層)」を参照。
+     
+     ```typescript
+     // application/usecases/ArchiveProjectUseCase.ts（抜粋）
+     export class ArchiveProjectUseCase implements ArchiveProjectDriverPort {
+       constructor(
+         private readonly projectRepo: ProjectRepository,
+         private readonly clock: ClockPort
+       ) {}
+     
+       async execute(projectId: string, archivedBy: string): Promise<void> {
+         const project = await this.projectRepo.findById(projectId);
+         const { nextState } = archiveProject(project, {
+           archivedBy,
+           archivedAt: this.clock.now(),
+         });
+         await this.projectRepo.save(nextState);
+       }
+     }
+     ```
+
+3. **リンクとパスを必ず明示する**
+   - 抜粋だけではなく、**元のファイルパス**と **X.2 の見出しへのリンク**をセットで書く。
+   - これにより、コードを変更したいときは「X.2 のサンプルだけを更新すればよい」状態を保つ。
+
+4. **変更容易性を優先する**
+   - クラスやインターフェースの仕様変更があった場合、まず X.2 のフルサンプルを更新し、各ルール節の抜粋は必要最低限の追従にとどめる。
+   - ルール節でフルコードを再掲したくなった場合は、代わりに「該当サンプル」への参照と短い抜粋で表現できないかを検討する。
+
 ### 記述の一貫性ガイドライン
 
 1. **セクション番号の調整**
