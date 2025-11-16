@@ -582,27 +582,15 @@ export interface ProjectRepository {
   * インターフェースと実装の対応を分かりやすくする
   * テスト時に個別の UseCase をモック化しやすくする
 * **該当サンプル:**
+  * `application/driver-ports/ArchiveProjectDriverPort.ts`
+  * `application/usecases/ArchiveProjectUseCase.ts`  
+    詳細な実装は「[Driver Port インターフェース（Application層）](#driver-port-インターフェースapplication層)」および「[UseCase実装（Application層）](#usecase実装application層)」を参照。
 
 ```typescript
-// application/driver-ports/ArchiveProjectDriverPort.ts - インターフェース
+// application/driver-ports/ArchiveProjectDriverPort.ts（抜粋）
 
 export interface ArchiveProjectDriverPort {
   execute(projectId: string, archivedBy: string): Promise<void>;
-}
-```
-
-```typescript
-// application/usecases/ArchiveProjectUseCase.ts - 実装
-
-export class ArchiveProjectUseCase implements ArchiveProjectDriverPort {
-  constructor(
-    private readonly projectRepo: ProjectRepository,
-    private readonly clock: ClockPort
-  ) {}
-
-  async execute(projectId: string, archivedBy: string): Promise<void> {
-    // 実装
-  }
 }
 ```
 
@@ -631,31 +619,19 @@ export class ArchiveProjectUseCase implements ArchiveProjectDriverPort {
   * テスト時にモックを簡単に注入できる
   * 責務を明確に分離する
 * **該当サンプル:**
+  * `application/index.ts`
+  * `application/usecases/ArchiveProjectUseCase.ts`
+  * `bootstrap/DIContainer.ts`  
+    詳細は「[Applicationエントリーポイント（Application層）](#applicationエントリーポイントapplication層)」および「[Bootstrap層での依存性注入](#bootstrap層での依存性注入)」を参照。
 
 ```typescript
-// application/index.ts
+// application/index.ts（抜粋）
 
-/**
- * Application クラスは Driver Port のコンテナ
- * Bootstrap 層から UseCase 実装を注入される
- */
 export class Application {
   constructor(
     public readonly createProject: CreateProjectDriverPort,
     public readonly archiveProject: ArchiveProjectDriverPort,
     public readonly listProjects: ListProjectsDriverPort
-  ) {}
-}
-```
-
-```typescript
-// application/usecases/ArchiveProjectUseCase.ts
-
-export class ArchiveProjectUseCase implements ArchiveProjectDriverPort {
-  // 依存性をコンストラクタで受け取るだけ
-  constructor(
-    private readonly projectRepo: ProjectRepository,
-    private readonly clock: ClockPort
   ) {}
 }
 ```
@@ -681,11 +657,14 @@ export class ArchiveProjectUseCase implements ArchiveProjectDriverPort {
   * Presentation 層がどのようなエラーをハンドリングすべきか明確にする
   * エラーの定義場所を探しやすくする
 * **該当サンプル:**
-
-**Driver Port固有のエラー定義:**
+  * `application/driver-ports/ArchiveProjectDriverPort.ts`
+  * `application/errors/ValidationError.ts`
+  * `application/usecases/ArchiveProjectUseCase.ts`
+  * `presentation/containers/hooks/useArchiveProject.ts`  
+    詳細は「[Driver Port インターフェース（Application層）](#driver-port-インターフェースapplication層)」および「[Presentation層でのエラーハンドリング例](#presentation層でのエラーハンドリング例)」を参照。
 
 ```typescript
-// application/driver-ports/ArchiveProjectDriverPort.ts から引用
+// application/driver-ports/ArchiveProjectDriverPort.ts（抜粋）
 
 export class ProjectNotFoundError extends Error {
   constructor(public readonly projectId: string) {
@@ -694,72 +673,8 @@ export class ProjectNotFoundError extends Error {
   }
 }
 
-/**
- * @throws {ProjectNotFoundError} プロジェクトが存在しない場合
- * @throws {ProjectAlreadyArchivedError} プロジェクトが既にアーカイブ済みの場合
- */
 export interface ArchiveProjectDriverPort {
   execute(projectId: string, archivedBy: string): Promise<void>;
-}
-```
-
-**UseCaseでのエラー使用:**
-
-```typescript
-// application/usecases/ArchiveProjectUseCase.ts から引用
-
-import {
-  ArchiveProjectDriverPort,
-  ProjectNotFoundError,
-  ProjectAlreadyArchivedError
-} from '@/application/driver-ports/ArchiveProjectDriverPort';
-
-export class ArchiveProjectUseCase implements ArchiveProjectDriverPort {
-  async execute(projectId: string, archivedBy: string): Promise<void> {
-    const project = await this.projectRepo.findById(projectId);
-    if (!project) {
-      throw new ProjectNotFoundError(projectId);
-    }
-    // ...
-  }
-}
-```
-
-**共有エラー:**
-
-```typescript
-// application/errors/ValidationError.ts から引用
-
-export class ValidationError extends Error {
-  constructor(message: string, public readonly field: string) {
-    super(message);
-    this.name = 'ValidationError';
-  }
-}
-```
-
-**Presentation層でのエラーハンドリング:**
-
-```typescript
-// presentation/containers/hooks/useArchiveProject.ts から引用
-
-import {
-  ProjectNotFoundError,
-  ProjectAlreadyArchivedError
-} from '@/application/driver-ports/ArchiveProjectDriverPort';
-
-export function useArchiveProject() {
-  const archiveProject = async (projectId: string) => {
-    try {
-      await app.archiveProject.execute(projectId, 'current-user-id');
-    } catch (error) {
-      if (error instanceof ProjectNotFoundError) {
-        showError('プロジェクトが見つかりません');
-      } else if (error instanceof ProjectAlreadyArchivedError) {
-        showError('このプロジェクトは既にアーカイブされています');
-      }
-    }
-  };
 }
 ```
 
@@ -785,9 +700,12 @@ export function useArchiveProject() {
   * 単純なクエリ転送の UseCase の肥大化を防ぐ
   * Repository の責務（データ取得の最適化）を明確にする
 * **該当サンプル:**
+  * `application/usecases/ListProjectsUseCase.ts`
+  * `application/usecases/GetProjectDetailUseCase.ts`  
+    詳細な実装は「[UseCase実装（Application層）](#usecase実装application層)」を参照。
 
 ```typescript
-// application/usecases/ListProjectsUseCase.ts - シンプルなRead系
+// application/usecases/ListProjectsUseCase.ts（抜粋）
 
 export class ListProjectsUseCase implements ListProjectsDriverPort {
   constructor(
@@ -795,41 +713,7 @@ export class ListProjectsUseCase implements ListProjectsDriverPort {
   ) {}
 
   async execute(): Promise<ProjectSummary[]> {
-    // シンプルにRepositoryを呼び出すだけ
     return this.projectRepo.list();
-  }
-}
-```
-
-```typescript
-// application/usecases/GetProjectDetailUseCase.ts - 変換ロジック付き
-
-import { calculateProjectCost } from '@/domain/Project/queries';
-
-export class GetProjectDetailUseCase implements GetProjectDetailDriverPort {
-  constructor(
-    private readonly projectRepo: ProjectRepository,
-    private readonly taskRepo: TaskRepository
-  ) {}
-
-  async execute(projectId: string): Promise<ProjectDetail> {
-    // 1. データ取得
-    const project = await this.projectRepo.findById(projectId);
-    if (!project) {
-      throw new ProjectNotFoundError(projectId);
-    }
-
-    const tasks = await this.taskRepo.findByProjectId(projectId);
-
-    // 2. Domain Queryで集計（複雑なロジックはDomainに委譲）
-    const totalCost = calculateProjectCost(project, tasks);
-
-    // 3. 結果を組み立て
-    return {
-      ...project,
-      tasks,
-      totalCost,
-    };
   }
 }
 ```
