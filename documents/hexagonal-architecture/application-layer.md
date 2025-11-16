@@ -22,6 +22,7 @@ application/
 │   ├── {Aggregate}Repository.ts
 │   ├── ClockPort.ts
 │   └── IdPort.ts
+├── errors/                            # 複数UseCaseで共有されるエラー
 └── index.ts                           # Application クラス
 
 ```
@@ -43,6 +44,8 @@ application/
 │   ├── UserRepository.ts             # Userの永続化インターフェース
 │   ├── ClockPort.ts                  # 時刻取得のインターフェース
 │   └── IdPort.ts                     # ID生成のインターフェース
+├── errors/
+│   └── ValidationError.ts            # 複数UseCaseで共有されるバリデーションエラー
 └── index.ts                          # Applicationエントリーポイント
 
 ```
