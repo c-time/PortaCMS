@@ -24,26 +24,6 @@ application/
 │   └── IdPort.ts
 └── index.ts                           # Application クラス
 
-domain/
-├── {Aggregate1}/
-│   ├── entities.ts                    # Entity定義
-│   ├── commands.ts                    # Command（Write操作の純粋関数）
-│   └── queries.ts                     # Query（Read操作の純粋関数）
-└── {Aggregate2}/
-    ├── entities.ts
-    ├── commands.ts
-    └── queries.ts
-
-infrastructure/
-└── {DataStoreType}/
-    ├── schemas/                       # データベーススキーマ
-    │   └── {Aggregate}DocSchema.ts
-    └── adapters/                      # Driven Portの実装
-        └── {DataStoreType}{Aggregate}Repository.ts
-
-bootstrap/
-├── DIContainer.ts                     # DI Container
-└── ApplicationContext.tsx             # React Context
 ```
 
 ### 具体例の構造
@@ -65,26 +45,6 @@ application/
 │   └── IdPort.ts                     # ID生成のインターフェース
 └── index.ts                          # Applicationエントリーポイント
 
-domain/
-├── Project/
-│   ├── entities.ts                   # Project, ProjectSummary等
-│   ├── commands.ts                   # archiveProject, renameProject等
-│   └── queries.ts                    # calculateProjectCost等
-└── User/
-    ├── entities.ts
-    ├── commands.ts
-    └── queries.ts
-
-infrastructure/
-└── firestore/
-    ├── schemas/
-    │   └── ProjectDocSchema.ts       # Firestoreスキーマ定義
-    └── adapters/
-        └── FirestoreProjectRepository.ts  # ProjectRepositoryの実装
-
-bootstrap/
-├── DIContainer.ts
-└── ApplicationContext.tsx
 ```
 
 ## 6.2. サンプルコード（全体像）
