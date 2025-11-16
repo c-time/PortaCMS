@@ -119,9 +119,39 @@ export interface CreateProjectDriverPort {
 // application/driver-ports/ArchiveProjectDriverPort.ts
 
 // ========================================
+// Driver Port固有のエラー定義
+// ========================================
+
+/**
+ * プロジェクトが見つからない場合のエラー
+ */
+export class ProjectNotFoundError extends Error {
+  constructor(public readonly projectId: string) {
+    super(`Project not found: ${projectId}`);
+    this.name = 'ProjectNotFoundError';
+  }
+}
+
+/**
+ * プロジェクトが既にアーカイブ済みの場合のエラー
+ */
+export class ProjectAlreadyArchivedError extends Error {
+  constructor(public readonly projectId: string) {
+    super(`Project is already archived: ${projectId}`);
+    this.name = 'ProjectAlreadyArchivedError';
+  }
+}
+
+// ========================================
 // Driver Port定義（外部からの入力インターフェース）
 // ========================================
 
+/**
+ * ArchiveProjectDriverPort
+ *
+ * @throws {ProjectNotFoundError} プロジェクトが存在しない場合
+ * @throws {ProjectAlreadyArchivedError} プロジェクトが既にアーカイブ済みの場合
+ */
 export interface ArchiveProjectDriverPort {
   execute(projectId: string, archivedBy: string): Promise<void>;
 }
@@ -138,6 +168,27 @@ import { ProjectSummary } from '@/domain/Project/entities';
 
 export interface ListProjectsDriverPort {
   execute(): Promise<ProjectSummary[]>;
+}
+```
+
+### 共有エラー（Application層）
+
+```typescript
+// application/errors/ValidationError.ts
+
+// ========================================
+// 複数のDriver Portで共有されるエラー
+// ========================================
+
+/**
+ * バリデーションエラー
+ * 複数のUseCaseで使用される共通エラー
+ */
+export class ValidationError extends Error {
+  constructor(message: string, public readonly field: string) {
+    super(message);
+    this.name = 'ValidationError';
+  }
 }
 ```
 
@@ -236,21 +287,14 @@ export class CreateProjectUseCase implements CreateProjectDriverPort {
 ```typescript
 // application/usecases/ArchiveProjectUseCase.ts
 
-import { ArchiveProjectDriverPort } from '@/application/driver-ports/ArchiveProjectDriverPort';
+import {
+  ArchiveProjectDriverPort,
+  ProjectNotFoundError,
+  ProjectAlreadyArchivedError
+} from '@/application/driver-ports/ArchiveProjectDriverPort';
 import { ProjectRepository } from '@/application/driven-ports/ProjectRepository';
 import { ClockPort } from '@/application/driven-ports/ClockPort';
 import { archiveProject } from '@/domain/Project/commands';
-
-// ========================================
-// カスタムエラー定義
-// ========================================
-
-export class ProjectNotFoundError extends Error {
-  constructor() {
-    super('Project not found.');
-    this.name = 'ProjectNotFoundError';
-  }
-}
 
 // ========================================
 // UseCase実装（Driver Portの実装）
@@ -266,16 +310,21 @@ export class ArchiveProjectUseCase implements ArchiveProjectDriverPort {
     // 1. Repository から Entity を取得
     const project = await this.projectRepo.findById(projectId);
     if (!project) {
-      throw new ProjectNotFoundError();
+      throw new ProjectNotFoundError(projectId);
     }
 
-    // 2. Domain Command を実行（純粋関数）
+    // 2. ビジネスルールのチェック
+    if (project.archivedAt) {
+      throw new ProjectAlreadyArchivedError(projectId);
+    }
+
+    // 3. Domain Command を実行（純粋関数）
     const { nextState } = archiveProject(project, {
       archivedBy,
       archivedAt: this.clock.now(),
     });
 
-    // 3. Repository に保存
+    // 4. Repository に保存
     await this.projectRepo.save(nextState);
   }
 }
@@ -326,6 +375,45 @@ export class Application {
     public readonly archiveProject: ArchiveProjectDriverPort,
     public readonly listProjects: ListProjectsDriverPort
   ) {}
+}
+```
+
+### Presentation層でのエラーハンドリング例
+
+```typescript
+// presentation/containers/hooks/useArchiveProject.ts
+
+import { useApplication } from '@/bootstrap/ApplicationContext';
+import {
+  ProjectNotFoundError,
+  ProjectAlreadyArchivedError
+} from '@/application/driver-ports/ArchiveProjectDriverPort';
+
+// ========================================
+// Container Hook
+// ========================================
+
+export function useArchiveProject() {
+  const app = useApplication();
+
+  const archiveProject = async (projectId: string) => {
+    try {
+      await app.archiveProject.execute(projectId, 'current-user-id');
+      // 成功処理
+      showSuccess('プロジェクトをアーカイブしました');
+    } catch (error) {
+      // Driver Portで定義されたエラーをハンドリング
+      if (error instanceof ProjectNotFoundError) {
+        showError('プロジェクトが見つかりません');
+      } else if (error instanceof ProjectAlreadyArchivedError) {
+        showError('このプロジェクトは既にアーカイブされています');
+      } else {
+        showError('予期しないエラーが発生しました');
+      }
+    }
+  };
+
+  return { archiveProject };
 }
 ```
 
@@ -612,39 +700,47 @@ export class ArchiveProjectUseCase implements ArchiveProjectDriverPort {
 * ❌ Application 層で DI Container を持つ（Bootstrap 層に委譲すべき）
 * ❌ Application 層でシングルトンパターンを使う（依存性注入すべき）
 
-## 6.8. ルール6: エラーは UseCase と同じファイルで定義する
+## 6.8. ルール6: エラーは Driver Port と同じファイルで定義する
 
-* **説明:** UseCase 固有のエラー（カスタムエラークラス）は、**UseCase と同じファイル** で定義します。複数の UseCase で共有されるエラーは、`application/errors/` フォルダに配置します。
+* **説明:** Driver Port 固有のエラー（カスタムエラークラス）は、**Driver Port と同じファイル** で定義します。エラーは戻り値の一部であり、インターフェースの契約の一部として扱います。複数の Driver Port で共有されるエラーは、`application/errors/` フォルダに配置します。
 * **意図:**
-  * エラーとそれを発生させる UseCase の関連性を明確にする
+  * エラーを Driver Port の契約の一部として明示する（Javaの `throws` 宣言と同様）
+  * エラーとそれを発生させる操作の関連性を明確にする
+  * Presentation 層がどのようなエラーをハンドリングすべきか明確にする
   * エラーの定義場所を探しやすくする
-  * UseCase の責務範囲を明確にする
 * **該当サンプル:**
 
-```typescript
-// application/usecases/ArchiveProjectUseCase.ts
+**Driver Port固有のエラー定義:**
 
-// ========================================
-// UseCase固有のエラー定義（同じファイル内）
-// ========================================
+```typescript
+// application/driver-ports/ArchiveProjectDriverPort.ts から引用
 
 export class ProjectNotFoundError extends Error {
-  constructor(projectId: string) {
+  constructor(public readonly projectId: string) {
     super(`Project not found: ${projectId}`);
     this.name = 'ProjectNotFoundError';
   }
 }
 
-export class ProjectAlreadyArchivedError extends Error {
-  constructor(projectId: string) {
-    super(`Project is already archived: ${projectId}`);
-    this.name = 'ProjectAlreadyArchivedError';
-  }
+/**
+ * @throws {ProjectNotFoundError} プロジェクトが存在しない場合
+ * @throws {ProjectAlreadyArchivedError} プロジェクトが既にアーカイブ済みの場合
+ */
+export interface ArchiveProjectDriverPort {
+  execute(projectId: string, archivedBy: string): Promise<void>;
 }
+```
 
-// ========================================
-// UseCase実装
-// ========================================
+**UseCaseでのエラー使用:**
+
+```typescript
+// application/usecases/ArchiveProjectUseCase.ts から引用
+
+import {
+  ArchiveProjectDriverPort,
+  ProjectNotFoundError,
+  ProjectAlreadyArchivedError
+} from '@/application/driver-ports/ArchiveProjectDriverPort';
 
 export class ArchiveProjectUseCase implements ArchiveProjectDriverPort {
   async execute(projectId: string, archivedBy: string): Promise<void> {
@@ -652,22 +748,16 @@ export class ArchiveProjectUseCase implements ArchiveProjectDriverPort {
     if (!project) {
       throw new ProjectNotFoundError(projectId);
     }
-
-    if (project.archivedAt) {
-      throw new ProjectAlreadyArchivedError(projectId);
-    }
-
-    // 以下省略
+    // ...
   }
 }
 ```
 
-```typescript
-// application/errors/ValidationError.ts - 共有エラーの例
+**共有エラー:**
 
-/**
- * 複数のUseCaseで使用される共通エラー
- */
+```typescript
+// application/errors/ValidationError.ts から引用
+
 export class ValidationError extends Error {
   constructor(message: string, public readonly field: string) {
     super(message);
@@ -676,15 +766,42 @@ export class ValidationError extends Error {
 }
 ```
 
+**Presentation層でのエラーハンドリング:**
+
+```typescript
+// presentation/containers/hooks/useArchiveProject.ts から引用
+
+import {
+  ProjectNotFoundError,
+  ProjectAlreadyArchivedError
+} from '@/application/driver-ports/ArchiveProjectDriverPort';
+
+export function useArchiveProject() {
+  const archiveProject = async (projectId: string) => {
+    try {
+      await app.archiveProject.execute(projectId, 'current-user-id');
+    } catch (error) {
+      if (error instanceof ProjectNotFoundError) {
+        showError('プロジェクトが見つかりません');
+      } else if (error instanceof ProjectAlreadyArchivedError) {
+        showError('このプロジェクトは既にアーカイブされています');
+      }
+    }
+  };
+}
+```
+
 ### チェックリスト
 
-* ✅ UseCase 固有のエラーは UseCase と同じファイルに定義されているか?
-* ✅ 複数の UseCase で共有されるエラーは `application/errors/` に配置されているか?
+* ✅ Driver Port 固有のエラーは Driver Port と同じファイルに定義されているか?
+* ✅ Driver Port のJSDocコメントに `@throws` でエラーを明示しているか?
+* ✅ 複数の Driver Port で共有されるエラーは `application/errors/` に配置されているか?
 * ✅ エラークラスに適切な情報（IDやフィールド名など）が含まれているか?
 
 ### アンチパターン
 
-* ❌ すべてのエラーを `errors/` フォルダにまとめる（UseCase との関連性が不明確）
+* ❌ エラーを UseCase ファイルに定義する（Driver Port の契約として明示されるべき）
+* ❌ すべてのエラーを `errors/` フォルダにまとめる（Driver Port との関連性が不明確）
 * ❌ エラーを Domain 層に定義する（Application 層の関心事）
 * ❌ 汎用的な Error クラスをそのまま throw する（エラーの種類が区別できない）
 
