@@ -461,9 +461,11 @@ export function createApplication(): Application {
   * Driven Port を使って外部システムとやり取り
   * Repository → Domain Command/Query → Repository の流れを実装
 * **該当サンプル:**
+  * `application/usecases/ArchiveProjectUseCase.ts`  
+    詳細な実装は「[UseCase実装（Application層）](#usecase実装application層)」を参照。
 
 ```typescript
-// application/usecases/ArchiveProjectUseCase.ts
+// application/usecases/ArchiveProjectUseCase.ts（抜粋）
 
 export class ArchiveProjectUseCase implements ArchiveProjectDriverPort {
   constructor(
@@ -472,19 +474,11 @@ export class ArchiveProjectUseCase implements ArchiveProjectDriverPort {
   ) {}
 
   async execute(projectId: string, archivedBy: string): Promise<void> {
-    // 1. Repository から Entity を取得
     const project = await this.projectRepo.findById(projectId);
-    if (!project) {
-      throw new ProjectNotFoundError();
-    }
-
-    // 2. Domain Command を実行（純粋関数）
     const { nextState } = archiveProject(project, {
       archivedBy,
       archivedAt: this.clock.now(),
     });
-
-    // 3. Repository に保存
     await this.projectRepo.save(nextState);
   }
 }
@@ -512,9 +506,12 @@ export class ArchiveProjectUseCase implements ArchiveProjectDriverPort {
   * テスト時に UseCase をモック化しやすくする
   * ヘキサゴナルアーキテクチャの「Port」を明示的に表現
 * **該当サンプル:**
+  * `application/driver-ports/CreateProjectDriverPort.ts`
+  * `application/driver-ports/ArchiveProjectDriverPort.ts`  
+    詳細は「[Driver Port インターフェース（Application層）](#driver-port-インターフェースapplication層)」を参照。
 
 ```typescript
-// application/driver-ports/CreateProjectDriverPort.ts
+// application/driver-ports/CreateProjectDriverPort.ts（抜粋）
 
 export interface CreateProjectDriverPort {
   execute(input: {
@@ -522,14 +519,6 @@ export interface CreateProjectDriverPort {
     description: string;
     ownerId: string;
   }): Promise<Project>;
-}
-```
-
-```typescript
-// application/driver-ports/ArchiveProjectDriverPort.ts
-
-export interface ArchiveProjectDriverPort {
-  execute(projectId: string, archivedBy: string): Promise<void>;
 }
 ```
 
@@ -558,35 +547,18 @@ export interface ArchiveProjectDriverPort {
   * Infrastructure 層はこれらの Driven Port を実装する（Adapter パターン）
   * テスト時の Mock 差し替えが容易
 * **該当サンプル:**
+  * `application/driven-ports/ProjectRepository.ts`
+  * `application/driven-ports/ClockPort.ts`
+  * `application/driven-ports/IdPort.ts`  
+    詳細は「[Driven Port インターフェース（Application層）](#driven-port-インターフェースapplication層)」を参照。
 
 ```typescript
-// application/driven-ports/ProjectRepository.ts
+// application/driven-ports/ProjectRepository.ts（抜粋）
 
 export interface ProjectRepository {
-  // Query メソッド（複数）
   findById(id: string): Promise<Project | null>;
-  findByUserId(userId: string): Promise<ProjectSummary[]>;
   list(options?: { limit?: number; offset?: number }): Promise<ProjectSummary[]>;
-  search(query: string): Promise<ProjectSummary[]>;
-
-  // Save メソッド（1つ）
   save(project: Project): Promise<void>;
-}
-```
-
-```typescript
-// application/driven-ports/ClockPort.ts
-
-export interface ClockPort {
-  now(): Date;
-}
-```
-
-```typescript
-// application/driven-ports/IdPort.ts
-
-export interface IdPort {
-  uuid(): string;
 }
 ```
 
