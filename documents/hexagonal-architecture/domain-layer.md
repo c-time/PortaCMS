@@ -32,7 +32,7 @@ domain/
 
 このセクションでは、Domain層の実装サンプルを提示します。後続のルールセクションでは、このサンプルの該当箇所を引用して説明します。
 
-### entities.ts のサンプル
+### Entity定義（Domain層）
 
 ```typescript
 // domain/Project/entities.ts
@@ -93,7 +93,7 @@ export class IncompleteEntityAccessError extends Error {
 }
 ```
 
-### commands.ts のサンプル
+### Command関数（Domain層）
 
 ```typescript
 // domain/Project/commands.ts
@@ -179,7 +179,7 @@ export function renameProject(
 }
 ```
 
-### queries.ts のサンプル
+### Query関数（Domain層）
 
 ```typescript
 // domain/Project/queries.ts
@@ -216,6 +216,90 @@ export function calculateProjectCost(
 }
 ```
 
+### Application層からの使用例
+
+```typescript
+// application/usecases/ArchiveProjectUseCase.ts
+
+import {
+  ArchiveProjectDriverPort,
+  ProjectNotFoundError,
+  ProjectAlreadyArchivedError
+} from '@/application/driver-ports/ArchiveProjectDriverPort';
+import { ProjectRepository } from '@/application/driven-ports/ProjectRepository';
+import { ClockPort } from '@/application/driven-ports/ClockPort';
+import { archiveProject } from '@/domain/Project/commands'; // Domain Command を import
+
+// ========================================
+// UseCase実装でDomain層を使用
+// ========================================
+
+export class ArchiveProjectUseCase implements ArchiveProjectDriverPort {
+  constructor(
+    private readonly projectRepo: ProjectRepository,
+    private readonly clock: ClockPort
+  ) {}
+
+  async execute(projectId: string, archivedBy: string): Promise<void> {
+    // 1. Repository から Entity を取得
+    const project = await this.projectRepo.findById(projectId);
+    if (!project) {
+      throw new ProjectNotFoundError(projectId);
+    }
+
+    // 2. Domain Command を実行（純粋関数）
+    const { nextState } = archiveProject(project, {
+      archivedBy,
+      archivedAt: this.clock.now(),
+    });
+
+    // 3. Repository に保存
+    await this.projectRepo.save(nextState);
+  }
+}
+```
+
+```typescript
+// application/usecases/CreateProjectUseCase.ts
+
+import { CreateProjectDriverPort } from '@/application/driver-ports/CreateProjectDriverPort';
+import { ProjectRepository } from '@/application/driven-ports/ProjectRepository';
+import { IdPort } from '@/application/driven-ports/IdPort';
+import { Project, createProject } from '@/domain/Project/entities'; // Domain Factory を import
+
+// ========================================
+// UseCase実装でDomain層のファクトリ関数を使用
+// ========================================
+
+export class CreateProjectUseCase implements CreateProjectDriverPort {
+  constructor(
+    private readonly projectRepo: ProjectRepository,
+    private readonly idPort: IdPort
+  ) {}
+
+  async execute(input: {
+    name: string;
+    description: string;
+    ownerId: string;
+  }): Promise<Project> {
+    // 1. Domain のファクトリ関数で Entity を作成
+    const project = createProject({
+      id: this.idPort.uuid(),
+      name: input.name,
+      description: input.description,
+      ownerId: input.ownerId,
+    });
+
+    // 2. Repository に保存
+    await this.projectRepo.save(project);
+
+    return project;
+  }
+}
+```
+
+> **Note**: Domain 層は副作用を持たず、Application 層の UseCase が Repository と組み合わせて使用します。詳細は「[Application層：UseCase と Driver/Driven Port の境界](./application-layer.md)」を参照してください。
+
 ## 4.3. ルール1: Aggregates はビジネスの整合性境界を定義する
 
 * **説明:** Aggregate は、**関連する Entity と Value Object をまとめた整合性の境界**です。Aggregate は以下を内包します：
@@ -251,7 +335,7 @@ export function calculateProjectCost(
 * **該当サンプル:**
   * `domain/Project/entities.ts` - Entity の定義とファクトリ関数、サブセットの定義
 
-  詳細な実装は「[entities.ts のサンプル](#entitiests-のサンプル)」を参照。
+  詳細な実装は「[Entity定義（Domain層）](#entity定義domain層)」を参照。
 
 ### チェックリスト
 
@@ -274,19 +358,7 @@ export function calculateProjectCost(
 * **該当サンプル:**
   * `domain/Project/commands.ts` - archiveProject, renameProject などの Command 関数
 
-  詳細な実装は「[commands.ts のサンプル](#commandsts-のサンプル)」を参照。
-
-```typescript
-// domain/Project/commands.ts（抜粋）
-// 純粋関数: (prevState, params) => { nextState, patch }
-export function archiveProject(
-  prevState: Project,
-  params: ArchiveProjectParams
-): ArchiveProjectResult {
-  // ...ビジネスロジック
-  return { nextState, patch };
-}
-```
+  詳細な実装は「[Command関数（Domain層）](#command関数domain層)」を参照。
 
 ### チェックリスト
 
@@ -308,19 +380,7 @@ export function archiveProject(
 * **該当サンプル:**
   * `domain/Project/queries.ts` - calculateProjectCost などの Query 関数
 
-  詳細な実装は「[queries.ts のサンプル](#queriests-のサンプル)」を参照。
-
-```typescript
-// domain/Project/queries.ts（抜粋）
-// 純粋関数: (state, params) => result
-export function calculateProjectCost(
-  project: Project,
-  params: CalculateProjectCostParams
-): ProjectCost {
-  // ...計算ロジック
-  return { basePrice, discount, finalPrice };
-}
-```
+  詳細な実装は「[Query関数（Domain層）](#query関数domain層)」を参照。
 
 ### チェックリスト
 
@@ -341,8 +401,21 @@ export function calculateProjectCost(
   * 技術スタックの変更に強い設計
   * ビジネスルールの可視化と理解の容易さ
 * **該当サンプル:**
-  * 上記のすべてのサンプルコードは、外部技術に依存していません
-  * `zod` のようなバリデーションライブラリは Domain 層で使用可能です（純粋な型定義とバリデーションのため）
+  * `domain/Project/entities.ts` - 外部技術に依存せず、zod による純粋な型定義のみ
+  * `domain/Project/commands.ts` - 純粋関数のみで、I/O操作なし
+  * `domain/Project/queries.ts` - 純粋関数のみで、I/O操作なし
+
+  詳細な実装は「[4.2. サンプルコード（全体像）](#42-サンプルコード全体像)」を参照。
+
+```typescript
+// ✅ 許可される依存
+import { z } from 'zod'; // バリデーションライブラリ（純粋な型定義）
+
+// ❌ 禁止される依存
+// import { Firestore } from 'firebase-admin/firestore'; // データベース
+// import { Request, Response } from 'express'; // HTTPフレームワーク
+// import { ProjectRepository } from '@/application/driven-ports/ProjectRepository'; // Application層
+```
 
 ### チェックリスト
 
