@@ -329,106 +329,93 @@ export class Application {
 }
 ```
 
-### Driven Port実装（Infrastructure層）
+### Bootstrap層での依存性注入
 
 ```typescript
-// infrastructure/firestore/adapters/FirestoreProjectRepository.ts
+// bootstrap/DIContainer.ts での使用例
 
-import { ProjectRepository } from '@/application/driven-ports/ProjectRepository';
-import { Project, ProjectSummary } from '@/domain/Project/entities';
-import { collection, doc, getDoc, getDocs, setDoc, query, where } from 'firebase/firestore';
-import { firestore } from '../firebase';
-import { ProjectDocSchema } from '../schemas/ProjectDocSchema';
+import { Application } from '@/application';
+import { CreateProjectUseCase } from '@/application/usecases/CreateProjectUseCase';
+import { ArchiveProjectUseCase } from '@/application/usecases/ArchiveProjectUseCase';
+import { ListProjectsUseCase } from '@/application/usecases/ListProjectsUseCase';
+import { FirestoreProjectRepository } from '@/infrastructure/firestore/adapters/FirestoreProjectRepository';
+import { SystemClock } from '@/infrastructure/ports/SystemClock';
+import { UuidGenerator } from '@/infrastructure/ports/UuidGenerator';
 
 // ========================================
-// Driven Port実装（Adapter）
+// DI Container
 // ========================================
 
-export class FirestoreProjectRepository implements ProjectRepository {
-  private readonly collectionPath = 'projects';
+export function createApplication(): Application {
+  // Driven Port の実装を生成
+  const projectRepo = new FirestoreProjectRepository();
+  const clock = new SystemClock();
+  const idGen = new UuidGenerator();
 
-  async findById(id: string): Promise<Project | null> {
-    const docRef = doc(firestore, this.collectionPath, id);
-    const snapshot = await getDoc(docRef);
+  // UseCase（Driver Port の実装）を生成
+  const createProject = new CreateProjectUseCase(projectRepo, idGen);
+  const archiveProject = new ArchiveProjectUseCase(projectRepo, clock);
+  const listProjects = new ListProjectsUseCase(projectRepo);
 
-    if (!snapshot.exists()) {
-      return null;
+  // Application クラスに注入
+  return new Application(createProject, archiveProject, listProjects);
+}
+```
+
+> **Note**: Infrastructure層のAdapter実装やPresentation層での使用方法の詳細は、それぞれのレイヤーのドキュメントを参照してください。
+
+## 6.3. ルール1: UseCase は Application 層で実装する
+
+* **説明:** UseCase は **Application 層の `usecases/` フォルダ** に配置します。UseCase は Driver Port インターフェースを実装し、Driven Port を使ってビジネスワークフローを実現します。UseCase は Domain の純粋関数（Command/Query）を組み合わせ、Repository を使って永続化を行います。
+* **意図:**
+  * UseCase を Application 層で実装することで、Domain 層を純粋に保つ
+  * Driver Port の実装として UseCase を提供
+  * Driven Port を使って外部システムとやり取り
+  * Repository → Domain Command/Query → Repository の流れを実装
+* **該当サンプル:**
+
+```typescript
+// application/usecases/ArchiveProjectUseCase.ts
+
+export class ArchiveProjectUseCase implements ArchiveProjectDriverPort {
+  constructor(
+    private readonly projectRepo: ProjectRepository,
+    private readonly clock: ClockPort
+  ) {}
+
+  async execute(projectId: string, archivedBy: string): Promise<void> {
+    // 1. Repository から Entity を取得
+    const project = await this.projectRepo.findById(projectId);
+    if (!project) {
+      throw new ProjectNotFoundError();
     }
 
-    const data = snapshot.data();
-    return ProjectDocSchema.parse(data) as Project;
-  }
+    // 2. Domain Command を実行（純粋関数）
+    const { nextState } = archiveProject(project, {
+      archivedBy,
+      archivedAt: this.clock.now(),
+    });
 
-  async findByUserId(userId: string): Promise<ProjectSummary[]> {
-    const q = query(
-      collection(firestore, this.collectionPath),
-      where('ownerId', '==', userId)
-    );
-    const snapshot = await getDocs(q);
-
-    return snapshot.docs.map(doc =>
-      ProjectDocSchema.parse(doc.data()) as ProjectSummary
-    );
-  }
-
-  async list(options?: { limit?: number; offset?: number }): Promise<ProjectSummary[]> {
-    const snapshot = await getDocs(collection(firestore, this.collectionPath));
-    return snapshot.docs.map(doc =>
-      ProjectDocSchema.parse(doc.data()) as ProjectSummary
-    );
-  }
-
-  async search(query: string): Promise<ProjectSummary[]> {
-    // 実装例（簡略版）
-    const snapshot = await getDocs(collection(firestore, this.collectionPath));
-    return snapshot.docs
-      .map(doc => ProjectDocSchema.parse(doc.data()) as ProjectSummary)
-      .filter(p => p.name.includes(query));
-  }
-
-  async save(project: Project): Promise<void> {
-    const docRef = doc(firestore, this.collectionPath, project.id);
-    await setDoc(docRef, project);
+    // 3. Repository に保存
+    await this.projectRepo.save(nextState);
   }
 }
 ```
 
-### 使用例（Presentation層のContainer Hook）
+### チェックリスト
 
-```typescript
-// presentation/containers/hooks/useProjectListContainer.tsx
+* ✅ UseCase は `application/usecases/` に配置されているか?
+* ✅ UseCase は Driver Port インターフェースを実装しているか?
+* ✅ UseCase は Driven Port をコンストラクタで受け取っているか?
+* ✅ UseCase は Repository → Domain Command → Repository の流れを実装しているか?
 
-import { useApplication } from '@/bootstrap/ApplicationContext';
-import { useEffect, useState } from 'react';
-import { ProjectSummary } from '@/domain/Project/entities';
+### アンチパターン
 
-// ========================================
-// Container Hook
-// ========================================
+* ❌ UseCase を Domain 層に配置する（Application 層に配置すべき）
+* ❌ UseCase が Infrastructure 層の具体実装に依存する（Driven Port を経由すべき）
+* ❌ UseCase がビジネスロジックを直接実装する（Domain の純粋関数に委譲すべき）
 
-export function useProjectListContainer() {
-  const app = useApplication(); // Bootstrap層から注入されたApplicationを取得
-  const [projects, setProjects] = useState<ProjectSummary[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    app.listProjects.execute()
-      .then(setProjects)
-      .finally(() => setLoading(false));
-  }, [app]);
-
-  const archiveProject = async (projectId: string) => {
-    await app.archiveProject.execute(projectId, 'current-user-id');
-    // リフレッシュ
-    const updated = await app.listProjects.execute();
-    setProjects(updated);
-  };
-
-  return { projects, loading, archiveProject };
-}
-```
-
-## 6.3. ルール1: Driver Port は Application 層で定義する
+## 6.4. ルール2: Driver Port は Application 層で定義する
 
 * **説明:** Driver Port（入力ポート）は **Application 層の `driver-ports/` フォルダ** に配置します。Driver Port は、Presentation 層などの外部から Application 層への入力インターフェースを定義します。各 UseCase に対応する Driver Port を作成します。
 * **意図:**
@@ -469,7 +456,7 @@ export interface ArchiveProjectDriverPort {
 * ❌ Driver Port を Domain 層に配置する（Application 層に配置すべき）
 * ❌ Driver Port を具象クラスで定義する（インターフェースであるべき）
 
-## 6.4. ルール2: Driven Port は Application 層で定義する
+## 6.5. ルール3: Driven Port は Application 層で定義する
 
 * **説明:** Driven Port（出力ポート）は **Application 層の `driven-ports/` フォルダ** に配置します。Driven Port は、Application 層が外部システム（データベース、外部API、時刻、ID生成など）に対して「何を要求するか」を定義します。Repository、外部サービス、時刻、ID生成などの抽象インターフェースがここに含まれます。
 * **Repository パターン:**
@@ -527,18 +514,25 @@ export interface IdPort {
 * ❌ Driven Port が Infrastructure 層の具体的な実装に依存する（抽象インターフェースであるべき）
 * ❌ Driven Port を Infrastructure 層に配置する（Application 層に配置すべき）
 
-## 6.5. ルール3: UseCase は Application 層で実装する
+## 6.6. ルール4: Driver Port と UseCase は1対1の関係
 
-* **説明:** UseCase は **Application 層の `usecases/` フォルダ** に配置します。UseCase は Driver Port インターフェースを実装し、Driven Port を使ってビジネスワークフローを実現します。UseCase は Domain の純粋関数（Command/Query）を組み合わせ、Repository を使って永続化を行います。
+* **説明:** 各 UseCase に対して、対応する Driver Port インターフェースを作成します。Driver Port と UseCase は **1対1の関係** を持ちます。
 * **意図:**
-  * UseCase を Application 層で実装することで、Domain 層を純粋に保つ
-  * Driver Port の実装として UseCase を提供
-  * Driven Port を使って外部システムとやり取り
-  * Repository → Domain Command/Query → Repository の流れを実装
+  * UseCase の責務を明確にする
+  * インターフェースと実装の対応を分かりやすくする
+  * テスト時に個別の UseCase をモック化しやすくする
 * **該当サンプル:**
 
 ```typescript
-// application/usecases/ArchiveProjectUseCase.ts
+// application/driver-ports/ArchiveProjectDriverPort.ts - インターフェース
+
+export interface ArchiveProjectDriverPort {
+  execute(projectId: string, archivedBy: string): Promise<void>;
+}
+```
+
+```typescript
+// application/usecases/ArchiveProjectUseCase.ts - 実装
 
 export class ArchiveProjectUseCase implements ArchiveProjectDriverPort {
   constructor(
@@ -547,38 +541,24 @@ export class ArchiveProjectUseCase implements ArchiveProjectDriverPort {
   ) {}
 
   async execute(projectId: string, archivedBy: string): Promise<void> {
-    // 1. Repository から Entity を取得
-    const project = await this.projectRepo.findById(projectId);
-    if (!project) {
-      throw new ProjectNotFoundError();
-    }
-
-    // 2. Domain Command を実行（純粋関数）
-    const { nextState } = archiveProject(project, {
-      archivedBy,
-      archivedAt: this.clock.now(),
-    });
-
-    // 3. Repository に保存
-    await this.projectRepo.save(nextState);
+    // 実装
   }
 }
 ```
 
 ### チェックリスト
 
-* ✅ UseCase は `application/usecases/` に配置されているか?
-* ✅ UseCase は Driver Port インターフェースを実装しているか?
-* ✅ UseCase は Driven Port をコンストラクタで受け取っているか?
-* ✅ UseCase は Repository → Domain Command → Repository の流れを実装しているか?
+* ✅ 各 UseCase に対応する Driver Port インターフェースが存在するか?
+* ✅ UseCase クラスが Driver Port インターフェースを実装しているか?
+* ✅ Driver Port と UseCase の命名が一致しているか（例: `ArchiveProjectDriverPort` と `ArchiveProjectUseCase`）?
 
 ### アンチパターン
 
-* ❌ UseCase を Domain 層に配置する（Application 層に配置すべき）
-* ❌ UseCase が Infrastructure 層の具体実装に依存する（Driven Port を経由すべき）
-* ❌ UseCase がビジネスロジックを直接実装する（Domain の純粋関数に委譲すべき）
+* ❌ 複数の UseCase が1つの Driver Port を実装する
+* ❌ UseCase が Driver Port を実装していない
+* ❌ Driver Port と UseCase の命名が不一致
 
-## 6.6. ルール4: Application 層は依存性注入を受け取るだけ
+## 6.7. ルール5: Application 層は依存性注入を受け取るだけ
 
 * **説明:** Application 層は以下を定義します：
   * **Driver Port インターフェース**: 外部からの入力インターフェース
@@ -632,7 +612,152 @@ export class ArchiveProjectUseCase implements ArchiveProjectDriverPort {
 * ❌ Application 層で DI Container を持つ（Bootstrap 層に委譲すべき）
 * ❌ Application 層でシングルトンパターンを使う（依存性注入すべき）
 
-## 6.7. ルール5: 循環依存を禁止し、境界を越えない
+## 6.8. ルール6: エラーは UseCase と同じファイルで定義する
+
+* **説明:** UseCase 固有のエラー（カスタムエラークラス）は、**UseCase と同じファイル** で定義します。複数の UseCase で共有されるエラーは、`application/errors/` フォルダに配置します。
+* **意図:**
+  * エラーとそれを発生させる UseCase の関連性を明確にする
+  * エラーの定義場所を探しやすくする
+  * UseCase の責務範囲を明確にする
+* **該当サンプル:**
+
+```typescript
+// application/usecases/ArchiveProjectUseCase.ts
+
+// ========================================
+// UseCase固有のエラー定義（同じファイル内）
+// ========================================
+
+export class ProjectNotFoundError extends Error {
+  constructor(projectId: string) {
+    super(`Project not found: ${projectId}`);
+    this.name = 'ProjectNotFoundError';
+  }
+}
+
+export class ProjectAlreadyArchivedError extends Error {
+  constructor(projectId: string) {
+    super(`Project is already archived: ${projectId}`);
+    this.name = 'ProjectAlreadyArchivedError';
+  }
+}
+
+// ========================================
+// UseCase実装
+// ========================================
+
+export class ArchiveProjectUseCase implements ArchiveProjectDriverPort {
+  async execute(projectId: string, archivedBy: string): Promise<void> {
+    const project = await this.projectRepo.findById(projectId);
+    if (!project) {
+      throw new ProjectNotFoundError(projectId);
+    }
+
+    if (project.archivedAt) {
+      throw new ProjectAlreadyArchivedError(projectId);
+    }
+
+    // 以下省略
+  }
+}
+```
+
+```typescript
+// application/errors/ValidationError.ts - 共有エラーの例
+
+/**
+ * 複数のUseCaseで使用される共通エラー
+ */
+export class ValidationError extends Error {
+  constructor(message: string, public readonly field: string) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
+```
+
+### チェックリスト
+
+* ✅ UseCase 固有のエラーは UseCase と同じファイルに定義されているか?
+* ✅ 複数の UseCase で共有されるエラーは `application/errors/` に配置されているか?
+* ✅ エラークラスに適切な情報（IDやフィールド名など）が含まれているか?
+
+### アンチパターン
+
+* ❌ すべてのエラーを `errors/` フォルダにまとめる（UseCase との関連性が不明確）
+* ❌ エラーを Domain 層に定義する（Application 層の関心事）
+* ❌ 汎用的な Error クラスをそのまま throw する（エラーの種類が区別できない）
+
+## 6.9. ルール7: Read系UseCaseはシンプルに保つ
+
+* **説明:** Read系（クエリ）の UseCase は、Repository のメソッドを呼び出すだけのシンプルな実装に留めます。複雑な集計や変換ロジックが必要な場合は、Domain の Query 関数に委譲するか、Repository に専用のクエリメソッドを追加します。
+* **意図:**
+  * Read系とWrite系の UseCase を明確に区別する
+  * 単純なクエリ転送の UseCase の肥大化を防ぐ
+  * Repository の責務（データ取得の最適化）を明確にする
+* **該当サンプル:**
+
+```typescript
+// application/usecases/ListProjectsUseCase.ts - シンプルなRead系
+
+export class ListProjectsUseCase implements ListProjectsDriverPort {
+  constructor(
+    private readonly projectRepo: ProjectRepository
+  ) {}
+
+  async execute(): Promise<ProjectSummary[]> {
+    // シンプルにRepositoryを呼び出すだけ
+    return this.projectRepo.list();
+  }
+}
+```
+
+```typescript
+// application/usecases/GetProjectDetailUseCase.ts - 変換ロジック付き
+
+import { calculateProjectCost } from '@/domain/Project/queries';
+
+export class GetProjectDetailUseCase implements GetProjectDetailDriverPort {
+  constructor(
+    private readonly projectRepo: ProjectRepository,
+    private readonly taskRepo: TaskRepository
+  ) {}
+
+  async execute(projectId: string): Promise<ProjectDetail> {
+    // 1. データ取得
+    const project = await this.projectRepo.findById(projectId);
+    if (!project) {
+      throw new ProjectNotFoundError(projectId);
+    }
+
+    const tasks = await this.taskRepo.findByProjectId(projectId);
+
+    // 2. Domain Queryで集計（複雑なロジックはDomainに委譲）
+    const totalCost = calculateProjectCost(project, tasks);
+
+    // 3. 結果を組み立て
+    return {
+      ...project,
+      tasks,
+      totalCost,
+    };
+  }
+}
+```
+
+### チェックリスト
+
+* ✅ Read系 UseCase はシンプルな実装に留めているか?
+* ✅ 複雑な集計ロジックは Domain の Query 関数に委譲しているか?
+* ✅ 複雑なクエリは Repository に専用メソッドを追加しているか?
+
+### アンチパターン
+
+* ❌ Read系 UseCase で複雑なビジネスロジックを実装する（Domain に委譲すべき）
+* ❌ Read系 UseCase でデータ整形のみを行う（Repository で対応すべき）
+* ❌ すべてのクエリに UseCase を作成する（シンプルなクエリは Repository 直接呼び出しでも可）
+
+## 6.10. ルール8: 循環依存を禁止し、境界を越えない
 
 * **説明:** `presentation → bootstrap → application → domain`、`infrastructure → application → domain` の **一方向** を遵守します。Application 層から Infrastructure を **import しない**（Adapter の型参照も NG、型は Driven Port で閉じる）。
 * **意図:** 依存グラフを単純に保ち、ビルドと実行の安定性を確保するためです。
@@ -662,47 +787,3 @@ import { archiveProject } from '@/domain/Project/commands'; // Domain層（OK）
 * ❌ Application 層が Infrastructure 層の具体実装を import する
 * ❌ Application 層が Presentation 層のコンポーネントを import する
 * ❌ 循環依存が発生している（例: `application → domain → application`）
-
-## 6.8. ルール6: Driver Port と UseCase は1対1の関係
-
-* **説明:** 各 UseCase に対して、対応する Driver Port インターフェースを作成します。Driver Port と UseCase は **1対1の関係** を持ちます。
-* **意図:**
-  * UseCase の責務を明確にする
-  * インターフェースと実装の対応を分かりやすくする
-  * テスト時に個別の UseCase をモック化しやすくする
-* **該当サンプル:**
-
-```typescript
-// application/driver-ports/ArchiveProjectDriverPort.ts - インターフェース
-
-export interface ArchiveProjectDriverPort {
-  execute(projectId: string, archivedBy: string): Promise<void>;
-}
-```
-
-```typescript
-// application/usecases/ArchiveProjectUseCase.ts - 実装
-
-export class ArchiveProjectUseCase implements ArchiveProjectDriverPort {
-  constructor(
-    private readonly projectRepo: ProjectRepository,
-    private readonly clock: ClockPort
-  ) {}
-
-  async execute(projectId: string, archivedBy: string): Promise<void> {
-    // 実装
-  }
-}
-```
-
-### チェックリスト
-
-* ✅ 各 UseCase に対応する Driver Port インターフェースが存在するか?
-* ✅ UseCase クラスが Driver Port インターフェースを実装しているか?
-* ✅ Driver Port と UseCase の命名が一致しているか（例: `ArchiveProjectDriverPort` と `ArchiveProjectUseCase`）?
-
-### アンチパターン
-
-* ❌ 複数の UseCase が1つの Driver Port を実装する
-* ❌ UseCase が Driver Port を実装していない
-* ❌ Driver Port と UseCase の命名が不一致
