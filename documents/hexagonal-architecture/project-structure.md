@@ -16,13 +16,12 @@ app/
 │       ├── design.md        # 設計仕様
 │       └── tasks.md         # タスク定義
 └── src/
-    ├── domain/         # ビジネスの中核（Aggregates, UseCases）
+    ├── domain/         # ビジネスの中核（Aggregates）
     │   ├── {Aggregate1}/   # Aggregate単位でフォルダ分割
     │   │   ├── entities.ts # すべてのEntity（完全版とサブセット）
     │   │   ├── commands.ts # すべてのCommands（Write操作の純粋関数）
     │   │   └── queries.ts  # すべてのQuery（Read操作の純粋関数）
-    │   ├── {Aggregate2}/
-    │   └── usecases/       # UseCase（Aggregateをまたぐワークフロー）
+    │   └── {Aggregate2}/
     ├── application/    # Application層
     │   ├── usecases/   # UseCase実装（driver-portsの実装）
     │   ├── driver-ports/   # Driver Portインターフェース（外部からの入力を受ける）
