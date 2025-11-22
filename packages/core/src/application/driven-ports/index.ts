@@ -15,3 +15,4 @@ export { WorkspaceRepository } from './WorkspaceRepository.js';
 export { WebsiteRepository } from './WebsiteRepository.js';
 export { ContentModelRepository } from './ContentModelRepository.js';
 export { ContentItemRepository, ContentItemQueryOptions, ContentItemIdType } from './ContentItemRepository.js';
+export { JobRepository } from './JobRepository.js';
