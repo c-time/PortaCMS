@@ -302,11 +302,11 @@ export class DIContainer {
 // ========================================
 
 /**
- * Application facade interface
+ * Application facade type
  *
  * Groups all use cases by domain for easy access.
  */
-interface Application {
+type ApplicationUseCases = {
   workspace: {
     create: CreateWorkspaceUseCase;
     // TODO: Add other workspace use cases
@@ -319,7 +319,7 @@ interface Application {
   // website: { ... };
   // contentModel: { ... };
   // contentItem: { ... };
-}
+};
 
 /**
  * Application facade implementation
@@ -327,7 +327,9 @@ interface Application {
  * Simple container for organizing use cases by domain.
  */
 class Application {
-  constructor(useCases: Application) {
-    Object.assign(this, useCases);
+  workspace: ApplicationUseCases['workspace'];
+
+  constructor(useCases: ApplicationUseCases) {
+    this.workspace = useCases.workspace;
   }
 }
