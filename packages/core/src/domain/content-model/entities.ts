@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { CategorySlugSchema, FieldSlugSchema, ContentListViewSlugSchema , ContentModelSlugSchema, VirtualFieldSchema } from '../shared/entities.js';
+import { FieldGroupId } from '../shared/ids.js';
 
 
 // String
@@ -76,12 +77,19 @@ export const FieldUIMetadataSchema = z.object({
   prefix: z.string().optional(),
   suffix: z.string().optional(),
   format: z.string().optional(),
+  fieldGroupId: FieldGroupId.optional(),
 });
 
-
+export const GroupSchema = z.object({
+  id: FieldGroupId,
+  label: z.string().min(1), // Display Label  
+  description: z.string().optional(),
+  documentUrl: z.string().optional(),
+});
 
 // Content item structure definition
 export const ContentItemStructureSchema = z.object({
+  groups: z.array(GroupSchema),
   fields : z.array(z.object({
     slug: FieldSlugSchema,
     label: z.string(), // Display Label
@@ -96,6 +104,7 @@ export const ContentItemStructureSchema = z.object({
     label: z.string(), // Display Label
   })).default([]),
 
+  documentUrl: z.string().optional(),
   version: z.number().int().min(1).default(1),
   createdAt: z.date(),
   updatedAt: z.date(),
