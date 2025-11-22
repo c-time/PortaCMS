@@ -1,4 +1,4 @@
-import { Job } from './entities.js';
+import { Job, JobSchema } from './entities.js';
 
 // ========================================
 // Error definitions
@@ -36,6 +36,45 @@ export class JobNotInProgressError extends Error {
     super(`Job must be in 'in_progress' status to update progress. Current status: ${currentStatus}`);
     this.name = 'JobNotInProgressError';
   }
+}
+
+// ========================================
+// Create Job Command (Factory Function)
+// ========================================
+export interface CreateJobParams {
+  id: string;
+  name: string;
+  workspaceId: string;
+  userId: string;
+  steps: number;
+  createdAt: Date;
+}
+
+export interface CreateJobResult {
+  nextState: Job;
+}
+
+/**
+ * Pure function: (params) => { nextState }
+ * Creates a new Job in 'new' status
+ */
+export function createJob(
+  params: CreateJobParams
+): CreateJobResult {
+  const nextState = JobSchema.parse({
+    id: params.id,
+    name: params.name,
+    workspaceId: params.workspaceId,
+    userId: params.userId,
+    status: 'new',
+    steps: params.steps,
+    progress: 0,
+    createdAt: params.createdAt,
+    updatedAt: params.createdAt,
+    completedAt: null,
+  });
+
+  return { nextState };
 }
 
 // ========================================
@@ -233,43 +272,6 @@ export function timeoutJob(
     status: 'timed_out',
     updatedAt: params.timedOutAt,
     completedAt: params.timedOutAt,
-  };
-
-  const nextState: Job = {
-    ...prevState,
-    ...patch,
-  };
-
-  return { nextState, patch };
-}
-
-// ========================================
-// Rename Job Command
-// ========================================
-export interface RenameJobParams {
-  newName: string;
-  updatedAt: Date;
-}
-
-export interface RenameJobResult {
-  nextState: Job;
-  patch: Partial<Job>;
-}
-
-/**
- * Pure function: Renames a job
- */
-export function renameJob(
-  prevState: Job,
-  params: RenameJobParams
-): RenameJobResult {
-  if (!params.newName.trim()) {
-    throw new Error('Job name cannot be empty');
-  }
-
-  const patch: Partial<Job> = {
-    name: params.newName,
-    updatedAt: params.updatedAt,
   };
 
   const nextState: Job = {

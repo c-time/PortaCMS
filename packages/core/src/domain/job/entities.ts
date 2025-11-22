@@ -18,31 +18,3 @@ export const JobSchema = z.object({
 });
 
 export type Job = z.infer<typeof JobSchema>;
-
-// ========================================
-// Factory Function
-// ========================================
-/**
- * Factory function to create a new Job in 'new' status (immutable value)
- */
-export function createJob(input: {
-  id: string;
-  name: string;
-  workspaceId: string;
-  userId: string;
-  steps: number;
-  createdAt: Date;
-}): Job {
-  return JobSchema.parse({
-    id: input.id,
-    name: input.name,
-    workspaceId: input.workspaceId,
-    userId: input.userId,
-    status: 'new',
-    steps: input.steps,
-    progress: 0,
-    createdAt: input.createdAt,
-    updatedAt: input.createdAt,
-    completedAt: null,
-  });
-}
