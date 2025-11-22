@@ -17,12 +17,17 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspaces",
+    "build": "npm run build:core && npm run build:cli",
     "build:core": "npm run build --workspace=@porta-cms/core",
+    "build:cli": "npm run build --workspace=@porta-cms/cli",
+    "build:all": "npm run build --workspaces",
+    "rebuild": "npm run clean:cli && npm run clean:core && npm run build",
+    "clean": "npm run clean --workspaces --if-present",
+    "clean:core": "npm run clean --workspace=@porta-cms/core",
+    "clean:cli": "npm run clean --workspace=@porta-cms/cli",
     "dev": "npm run dev --workspaces",
     "watch": "npm run watch --workspaces",
-    "test": "npm run test --workspaces",
-    "clean": "npm run clean --workspaces --if-present"
+    "test": "npm run test --workspaces"
   },
   "devDependencies": {
     "@types/node": "^24.9.1",
