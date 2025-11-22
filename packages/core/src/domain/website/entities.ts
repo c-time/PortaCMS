@@ -11,7 +11,10 @@ export const PageContextSchema = z.object({
 // Mapper input configuration
 const MapperInputSchema = z.object({
   // Iterator for multipliable pages (e.g., "articles", "products")
-  iterator: ContentModelSlugSchema.optional(),
+  iterator: z.object({
+    slug: ContentListViewSlugSchema,
+    type: z.enum(["perItem","perPage"]),
+  }).optional(),
 
   // Single item content references (e.g., "SiteConfig", "CompanyPageConfig")
   objectContents: z.array(ContentModelSlugSchema).optional(),
