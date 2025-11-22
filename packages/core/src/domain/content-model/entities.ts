@@ -59,7 +59,7 @@ export const DataTypesSchema = z.union([
 ]);
 
 
-export const UIMetadataSchema = z.object({
+export const FieldUIMetadataSchema = z.object({
   type: z.string().optional(),
   label: z.string().optional(),
   maxLength: z.number().int().min(0).optional(),
@@ -86,7 +86,7 @@ export const ContentItemStructureSchema = z.object({
     slug: FieldSlugSchema,
     label: z.string(), // Display Label
     schema : DataTypesSchema,
-    uiMetadata: UIMetadataSchema,
+    uiMetadata: FieldUIMetadataSchema,
   })),
 
   virtualFields: z.array(VirtualFieldSchema).default([]),
