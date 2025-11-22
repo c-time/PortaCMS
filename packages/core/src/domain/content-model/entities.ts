@@ -104,7 +104,7 @@ export const ContentItemStructureSchema = z.object({
     label: z.string(), // Display Label
   })).default([]),
 
-  documentUrl: z.string().optional(),
+
   version: z.number().int().min(1).default(1),
   createdAt: z.date(),
   updatedAt: z.date(),
@@ -142,61 +142,41 @@ export const ContentListViewStructureSchema = z.object({
   updatedAt: z.date(),
 });
 
-// Main content list structure
-export const ListContentModelStructureSchema = z.object({
-  contentItemStructure: ContentItemStructureSchema,
-  contentListViewStructure: z.array(ContentListViewStructureSchema).default([]),
-});
-
 // Type is defined above
 export type ContentItemStructure = z.infer<typeof ContentItemStructureSchema>;
 export type ContentListViewStructure = z.infer<typeof ContentListViewStructureSchema>;
-export type ListContentModelStructure = z.infer<typeof ListContentModelStructureSchema>;
 
-
-// Content list entity (collection of multiple items)
-export const ListContentModelSchema = z.object({
-  modelType: z.literal('list'),
+// Base content model schema
+export const BaseContentModelSchema = z.object({
   slug: ContentModelSlugSchema,
-  name: z.string()
-    .min(1, { message: "Content list name is required" }),
+  label: z.string()
+    .min(1, { message: "Content model name is required" }),
   description: z.string()
     .optional(),
-
-  listContentModelStructure: ListContentModelStructureSchema,
-
-  enableTags: z.boolean().default(false),
-  enableCategories: z.boolean().default(false),
-
-  enablePublishScheduling: z.boolean().default(false),
+  documentUrl: z.string().optional(), 
   isActive: z.boolean().default(true),
+  enablePublishScheduling: z.boolean().default(false),
   version: z.number().int().min(1).default(1),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
 
-
-export const ObjectContentModelStructureSchema = z.object({
+// Content list entity (collection of multiple items)
+export const ListContentModelSchema = BaseContentModelSchema.extend(z.object({
+  modelType: z.literal('list'),
+  enableCategories: z.boolean().default(false),
   contentItemStructure: ContentItemStructureSchema,
-});
+  contentListViewStructure: z.array(ContentListViewStructureSchema).default([]),
+}));
+
 
 // Object content entity (singleton item)
 export const ObjectContentModelSchema = z.object({
   modelType: z.literal('object'),
-  slug: ContentModelSlugSchema,
-  name: z.string()
-    .min(1, { message: "Content object name is required" }),
-  description: z.string()
-    .optional(),
-
-  objectContentModelStructure: ObjectContentModelStructureSchema,
-
-  enablePublishScheduling: z.boolean().default(false),
-  isActive: z.boolean().default(true),
-  version: z.number().int().min(1).default(1),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  contentItemStructure: ContentItemStructureSchema,
 });
+
+
 
 export type ListContentModel = z.infer<typeof ListContentModelSchema>;
 export type ObjectContentModel = z.infer<typeof ObjectContentModelSchema>;
