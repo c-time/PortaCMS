@@ -12,18 +12,16 @@ title: Bootstrap層：依存性注入の専用層
 
 ```
 bootstrap/
-├── DIContainer.ts          # DI Container（依存性の解決）
-├── ApplicationContext.tsx  # React Context（Application の提供）
-└── index.ts                # ブートストラップのエントリーポイント
+├── DIContainer.ts    # DI Container（依存性の解決）
+└── index.ts          # ブートストラップのエントリーポイント
 ```
 
 ### 具体例の構造
 
 ```
 bootstrap/
-├── DIContainer.ts          # 依存性注入コンテナ（Repository、Provider、UseCaseの生成）
-├── ApplicationContext.tsx  # React Context による Application 提供
-└── index.ts                # エクスポートのエントリーポイント
+├── DIContainer.ts    # 依存性注入コンテナ（Repository、Provider、UseCaseの生成）
+└── index.ts          # エクスポートのエントリーポイント
 ```
 
 ## 7.2. サンプルコード（全体像）
@@ -274,78 +272,28 @@ export class DIContainer {
 }
 ```
 
-### React Context の実装
-
-```typescript
-// bootstrap/ApplicationContext.tsx
-
-import React, { createContext, useContext, useMemo } from 'react';
-import { Application } from '@/application';
-import { DIContainer } from './DIContainer';
-
-// ========================================
-// Context 定義
-// ========================================
-
-const ApplicationContext = createContext<Application | null>(null);
-
-// ========================================
-// Provider コンポーネント
-// ========================================
-
-/**
- * ApplicationProvider
- * Application インスタンスを生成し、Context で提供する
- */
-export function ApplicationProvider({ children }: { children: React.ReactNode }) {
-  // useMemo で Application インスタンスを一度だけ生成
-  const app = useMemo(() => DIContainer.createApplication(), []);
-
-  return (
-    <ApplicationContext.Provider value={app}>
-      {children}
-    </ApplicationContext.Provider>
-  );
-}
-
-// ========================================
-// Hook
-// ========================================
-
-/**
- * useApplication Hook
- * Presentation 層から Application にアクセスするためのフック
- */
-export function useApplication(): Application {
-  const app = useContext(ApplicationContext);
-  if (!app) {
-    throw new Error('useApplication must be used within ApplicationProvider');
-  }
-  return app;
-}
-```
-
 ### エントリーポイントでの使用例
 
 ```typescript
-// main.tsx
+// bootstrap/index.ts
 
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { ApplicationProvider } from './bootstrap/ApplicationContext';
-import App from './App';
+export { DIContainer } from './DIContainer';
+```
+
+```typescript
+// main.ts（アプリケーションのエントリーポイント）
+
+import { DIContainer } from '@/bootstrap';
 
 // ========================================
-// アプリケーションのエントリーポイント
+// アプリケーションの初期化
 // ========================================
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <ApplicationProvider>
-      <App />
-    </ApplicationProvider>
-  </React.StrictMode>
-);
+// Application インスタンスを生成
+const application = DIContainer.createApplication();
+
+// Presentation 層で使用
+// 例: application.createProject.execute({ ... })
 ```
 
 ### テストでの使用例
@@ -480,83 +428,44 @@ static createApplication(): Application {
 * ❌ UseCase 内で Repository を直接 new する（DI Container から注入すべき）
 * ❌ 複数の箇所で Repository インスタンスを生成する（シングルトンにすべき）
 
-## 7.5. ルール3: React Context で Application を提供する
+## 7.5. ルール3: Application は DIContainer.createApplication() で取得する
 
-* **説明:** React アプリケーションでは、**React Context** を使って、Bootstrap 層で生成した Application インスタンスを Presentation 層に提供します。
-* **意図:** グローバルな依存関係を Props のバケツリレーなしで提供し、コンポーネントツリー全体で Application にアクセス可能にします。
+* **説明:** Application インスタンスは、`DIContainer.createApplication()` を呼び出して取得します。このメソッドは、すべての依存関係を解決し、完全に構成された Application を返します。
+* **意図:**
+  * 依存関係の構築ロジックを一箇所に集約
+  * Application の生成方法を統一
+  * テストと本番で同じインターフェースを使用
 * **該当サンプル:**
-  * `bootstrap/ApplicationContext.tsx`
-  詳細な実装は「[React Context の実装](#react-context-の実装)」を参照。
+  * `bootstrap/DIContainer.ts`
+  * `main.ts`
+  詳細な実装は「[DI Container の実装](#di-container-の実装)」および「[エントリーポイントでの使用例](#エントリーポイントでの使用例)」を参照。
 
 ```typescript
-// bootstrap/ApplicationContext.tsx（抜粋）
+// main.ts（抜粋）
 
-const ApplicationContext = createContext<Application | null>(null);
+import { DIContainer } from '@/bootstrap';
 
-export function ApplicationProvider({ children }: { children: React.ReactNode }) {
-  const app = useMemo(() => DIContainer.createApplication(), []);
+// Application インスタンスを生成
+const application = DIContainer.createApplication();
 
-  return (
-    <ApplicationContext.Provider value={app}>
-      {children}
-    </ApplicationContext.Provider>
-  );
-}
-
-export function useApplication(): Application {
-  const app = useContext(ApplicationContext);
-  if (!app) {
-    throw new Error('useApplication must be used within ApplicationProvider');
-  }
-  return app;
-}
+// Presentation 層で使用
+// 例: application.createProject.execute({ ... })
 ```
 
 ### チェックリスト
 
-* ✅ ApplicationProvider コンポーネントが実装されているか？
-* ✅ useApplication Hook が実装されているか？
-* ✅ Application インスタンスは useMemo で一度だけ生成されているか？
-* ✅ useApplication Hook は Provider の外で使われた場合にエラーを投げるか？
+* ✅ Application の取得は DIContainer.createApplication() を使用しているか？
+* ✅ Application インスタンスはアプリケーション起動時に一度だけ生成されているか？
+* ✅ Application インスタンスは適切にPresentation層に渡されているか？
 
 ### アンチパターン
 
-* ❌ グローバル変数で Application を共有する（Context を使うべき）
-* ❌ 各コンポーネントで DIContainer.createApplication() を呼ぶ（Provider で一度だけ生成すべき）
+* ❌ 各コンポーネントで DIContainer.createApplication() を呼ぶ（起動時に一度だけ生成すべき）
+* ❌ Application を new Application() で直接インスタンス化する（DI Container を使うべき）
 
-## 7.6. ルール4: エントリーポイントで ApplicationProvider をセットアップ
+## 7.6. ルール4: テストでは DI Container を上書きする
 
-* **説明:** アプリケーションのエントリーポイント（`main.tsx`）で、`ApplicationProvider` をセットアップします。
-* **意図:** アプリケーション起動時に、依存関係を一度だけ解決し、全体で共有します。
-* **該当サンプル:**
-  * `main.tsx`
-  詳細な実装は「[エントリーポイントでの使用例](#エントリーポイントでの使用例)」を参照。
-
-```typescript
-// main.tsx（抜粋）
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <ApplicationProvider>
-      <App />
-    </ApplicationProvider>
-  </React.StrictMode>
-);
-```
-
-### チェックリスト
-
-* ✅ main.tsx で ApplicationProvider がセットアップされているか？
-* ✅ ApplicationProvider はコンポーネントツリーのルートに配置されているか？
-
-### アンチパターン
-
-* ❌ ApplicationProvider を配置せずに useApplication を使う（エラーになる）
-* ❌ 複数の ApplicationProvider をネストする（依存関係が重複する）
-
-## 7.7. ルール5: テストでは DI Container を上書きする
-
-* **説明:** テスト時には、`DIContainer.override()` を使って、Mock実装を注入します。
+* **説明:** テスト時には、`DIContainer.override()` を使って、Mock実装を注入します。テストの前に `DIContainer.reset()` で依存関係をリセットし、テスト間の状態漏れを防ぎます。
 * **意図:** テストの独立性を保ち、外部依存なしでユニットテストを実行できるようにします。
 * **該当サンプル:**
   * `tests/setup.ts`
@@ -588,8 +497,9 @@ beforeEach(() => {
 
 * ❌ テスト間で依存関係をリセットせず、状態が漏れる
 * ❌ テストで本番の Repository 実装を使う（Mock を使うべき）
+* ❌ 各テストケースで個別に依存関係を構築する（beforeEach で統一すべき）
 
-## 7.8. ルール6: 環境変数は Bootstrap 層でのみ読み込む
+## 7.7. ルール5: 環境変数は Bootstrap 層でのみ読み込む
 
 * **説明:** 環境変数（`import.meta.env.*`, `process.env.*`）の読み込みは、**Bootstrap 層でのみ**行います。他の層では環境変数に直接アクセスしません。
 * **意図:**
@@ -625,6 +535,7 @@ private static initializeFirebase(): void {
 * ✅ Application 層が環境変数に直接アクセスしていないか？
 * ✅ Infrastructure 層が環境変数に直接アクセスしていないか？
 * ✅ Domain 層が環境変数に直接アクセスしていないか？
+* ✅ Presentation 層が環境変数に直接アクセスしていないか？
 
 ### アンチパターン
 
@@ -632,3 +543,45 @@ private static initializeFirebase(): void {
 * ❌ Infrastructure 層で `import.meta.env.*` を読み込む
 * ❌ Domain 層で `import.meta.env.*` を読み込む
 * ❌ Presentation 層で `import.meta.env.*` を読み込む
+
+## 7.8. ルール6: Presentation 層への Application の提供方法は Presentation 層が決定する
+
+* **説明:** Bootstrap 層は Application インスタンスを生成するのみで、それを Presentation 層にどのように提供するか（React Context、グローバル変数、依存性注入フレームワークなど）は **Presentation 層の責務** です。
+* **意図:**
+  * Bootstrap 層を UI フレームワークから独立させる
+  * 異なる UI フレームワーク（React、Vue、Svelte など）に対応可能にする
+  * Bootstrap 層の責務を依存性注入のみに限定
+* **該当サンプル:**
+  * `main.ts`
+  詳細な実装は「[エントリーポイントでの使用例](#エントリーポイントでの使用例)」を参照。
+
+```typescript
+// main.ts（抜粋）
+
+import { DIContainer } from '@/bootstrap';
+
+// Bootstrap層: Application を生成
+const application = DIContainer.createApplication();
+
+// Presentation層の責務: Application を提供
+// 例1: React Context を使う場合（Presentation層で実装）
+// <ApplicationProvider value={application}>...</ApplicationProvider>
+
+// 例2: グローバル変数として提供する場合
+// window.app = application;
+
+// 例3: DI フレームワークに登録する場合
+// container.register('application', application);
+```
+
+### チェックリスト
+
+* ✅ Bootstrap 層は Application の生成のみを担当しているか？
+* ✅ Application の提供方法（Context、グローバル変数など）は Presentation 層で決定されているか？
+* ✅ Bootstrap 層に UI フレームワーク固有のコード（React、Vue など）が含まれていないか？
+
+### アンチパターン
+
+* ❌ Bootstrap 層で React Context を定義する（Presentation 層の責務）
+* ❌ Bootstrap 層で UI フレームワーク固有のコードを含む（フレームワーク非依存であるべき）
+* ❌ Bootstrap 層で Presentation 層のコンポーネントを import する（依存方向が逆）
