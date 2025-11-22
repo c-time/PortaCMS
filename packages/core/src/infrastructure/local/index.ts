@@ -8,5 +8,6 @@ export { LocalWorkspaceRepository } from './LocalWorkspaceRepository.js';
 export { LocalWebsiteRepository } from './LocalWebsiteRepository.js';
 export { LocalContentModelRepository } from './LocalContentModelRepository.js';
 export { LocalContentItemRepository } from './LocalContentItemRepository.js';
+export { DefaultStorageFiles } from './DefaultStorageFiles.js';
 
 export type { LocalStorageConfig, StorageFiles } from './types.js';
