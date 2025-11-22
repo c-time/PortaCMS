@@ -1,10 +1,4 @@
-import { z } from 'zod';
-import { JobSchema } from './entities.js';
-
-// ========================================
-// Type definitions
-// ========================================
-export type Job = z.infer<typeof JobSchema>;
+import { Job } from './entities.js';
 
 // ========================================
 // Error definitions
