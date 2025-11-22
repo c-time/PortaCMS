@@ -24,7 +24,7 @@ domain/
 domain/
 └── Project/
     ├── entities.ts    # Project, ProjectSummary など
-    ├── commands.ts    # archiveProject, renameProject など
+    ├── commands.ts    # createProject, archiveProject, renameProject など
     └── queries.ts     # calculateProjectCost など
 ```
 
@@ -52,22 +52,6 @@ export const ProjectSchema = z.object({
 });
 
 export type Project = z.infer<typeof ProjectSchema>;
-
-// ファクトリ関数（不変な値を返す）
-export function createProject(input: {
-  id: string;
-  name: string;
-  description: string;
-  ownerId: string;
-}): Project {
-  const now = new Date();
-  return ProjectSchema.parse({
-    ...input,
-    status: 'active',
-    createdAt: now,
-    updatedAt: now,
-  });
-}
 
 // ========================================
 // Entity サブセット（一覧表示用）
@@ -97,7 +81,7 @@ export class IncompleteEntityAccessError extends Error {
 
 ```typescript
 // domain/Project/commands.ts
-import { Project } from './entities';
+import { Project, ProjectSchema } from './entities';
 
 // ========================================
 // エラー定義
@@ -107,6 +91,39 @@ export class ProjectAlreadyArchivedError extends Error {
     super('Project is already archived.');
     this.name = 'ProjectAlreadyArchivedError';
   }
+}
+
+// ========================================
+// Create Project Command (Factory Function)
+// ========================================
+export interface CreateProjectParams {
+  id: string;
+  name: string;
+  description: string;
+  ownerId: string;
+  createdAt: Date;
+}
+
+export interface CreateProjectResult {
+  nextState: Project;
+}
+
+// 純粋関数: (params) => { nextState }
+// 新しいEntityを作成するファクトリ関数
+export function createProject(
+  params: CreateProjectParams
+): CreateProjectResult {
+  const nextState = ProjectSchema.parse({
+    id: params.id,
+    name: params.name,
+    description: params.description,
+    ownerId: params.ownerId,
+    status: 'active',
+    createdAt: params.createdAt,
+    updatedAt: params.createdAt,
+  });
+
+  return { nextState };
 }
 
 // ========================================
@@ -251,7 +268,7 @@ export function calculateProjectCost(
   * 常に正しい値が流れる状態を保証
   * サブセットにより、不要なデータ取得を回避し、パフォーマンスを最適化
 * **該当サンプル:**
-  * `domain/Project/entities.ts` - Entity の定義とファクトリ関数、サブセットの定義
+  * `domain/Project/entities.ts` - Entity の定義とサブセットの定義
 
   詳細な実装は「[Entity定義（Domain層）](#entity定義domain層)」を参照。
 
@@ -259,7 +276,6 @@ export function calculateProjectCost(
 
 * ✅ Entity は不変オブジェクトとして定義されているか？
 * ✅ Entity のサブセットを適切に使用しているか？
-* ✅ ファクトリ関数でスキーマバリデーションを行っているか？
 
 ### アンチパターン
 
@@ -268,21 +284,26 @@ export function calculateProjectCost(
 
 ## 4.5. ルール3: Commands は状態変更を行う純粋関数である
 
-* **説明:** Commands は `(prevState, params) => { nextState, patch }` という形式の**純粋関数**です。副作用を持たず、前の状態とパラメータから、次の状態と差分（patch）を計算して返します。
+* **説明:** Commands は以下の2つの形式のいずれかを取る**純粋関数**です：
+  * **新規作成（ファクトリ関数）**: `(params) => { nextState }` - 新しいEntityを作成
+  * **状態変更**: `(prevState, params) => { nextState, patch }` - 既存のEntityを変更
 * **意図:**
   * 予測可能性とテスト容易性を最大化
-  * 状態の変更履歴（patch）を保持可能
+  * 状態の変更履歴（patch）を保持可能（状態変更の場合）
   * Optimistic UI や Event Sourcing との相性が良い
+  * ファクトリ関数もCommandとして扱うことで、Entityの作成処理を統一的に管理
 * **該当サンプル:**
-  * `domain/Project/commands.ts` - archiveProject, renameProject などの Command 関数
+  * `domain/Project/commands.ts` - createProject（ファクトリ関数）, archiveProject, renameProject などの Command 関数
 
   詳細な実装は「[Command関数（Domain層）](#command関数domain層)」を参照。
 
 ### チェックリスト
 
-* ✅ Commands は `(prevState, params) => { nextState, patch }` の形式か？
+* ✅ 新規作成Commandは `(params) => { nextState }` の形式か？
+* ✅ 状態変更Commandは `(prevState, params) => { nextState, patch }` の形式か？
 * ✅ Commands は副作用を持たない純粋関数か？
-* ✅ patch（差分）を返しているか？
+* ✅ 状態変更の場合、patch（差分）を返しているか？
+* ✅ ファクトリ関数でスキーマバリデーションを行っているか？
 
 ### アンチパターン
 
