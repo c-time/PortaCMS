@@ -5,7 +5,7 @@
 
 export { LocalProjectRepository } from './LocalProjectRepository.js';
 export { LocalWorkspaceRepository } from './LocalWorkspaceRepository.js';
-export { LocalWebsiteRepository } from './LocalWebsiteRepository.js';
+export { LocalArtifactStructureRepository } from './LocalArtifactStructureRepository.js';
 export { LocalContentModelRepository } from './LocalContentModelRepository.js';
 export { LocalContentItemRepository } from './LocalContentItemRepository.js';
 
