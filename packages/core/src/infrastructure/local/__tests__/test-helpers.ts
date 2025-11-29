@@ -30,8 +30,8 @@ export class TestStorageFiles implements StorageFiles {
     return join(this.workspacesDir(), `${workspaceSlug}.json`);
   }
 
-  websiteConfigFile(workspaceSlug: WorkspaceSlug): string {
-    return join(this.baseDir, 'websites', `${workspaceSlug}.json`);
+  artifactStructureConfigFile(workspaceSlug: WorkspaceSlug): string {
+    return join(this.baseDir, 'artifact-structures', `${workspaceSlug}.json`);
   }
 
   contentModelsDir(workspaceSlug: WorkspaceSlug): string {

@@ -53,19 +53,19 @@ const PageSchema = z.object({
 
 });
 
-export const WebsiteStructureSchema = z.object({
+export const PagesStructureSchema = z.object({
   pages: z.array(PageSchema).default([]),
 });
 
 // Root entity schema
-export const WebsiteSchema = z.object({
+export const ArtifactStructureSchema = z.object({
   name: z.string()
-    .min(1, { message: "Website name is required" })
-    .max(100, { message: "Website name must not exceed 100 characters" }),
+    .min(1, { message: "ArtifactStructure name is required" })
+    .max(100, { message: "ArtifactStructure name must not exceed 100 characters" }),
   description: z.string()
     .max(500, { message: "Description must not exceed 500 characters" })
     .optional(),
-  websiteStructure: WebsiteStructureSchema,
+  pagesStructure: PagesStructureSchema,
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -75,5 +75,5 @@ export type MapperInput = z.infer<typeof MapperInputSchema>;
 export type MapperOutput = z.infer<typeof MapperOutputSchema>;
 export type Mapper = z.infer<typeof MapperSchema>;
 export type Page = z.infer<typeof PageSchema>;
-export type WebsiteStructure = z.infer<typeof WebsiteStructureSchema>;
-export type Website = z.infer<typeof WebsiteSchema>;
+export type PagesStructure = z.infer<typeof PagesStructureSchema>;
+export type ArtifactStructure = z.infer<typeof ArtifactStructureSchema>;

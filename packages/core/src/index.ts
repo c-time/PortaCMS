@@ -3,7 +3,8 @@ export * from './domain/project/entities.js';
 export * from './domain/project/commands.js';
 export * from './domain/workspace/entities.js';
 export * from './domain/workspace/commands.js';
-export * from './domain/website/entities.js';
+export * from './domain/artifact-structure/entities.js';
+export * from './domain/artifact/entities.js';
 export * from './domain/content-model/entities.js';
 export * from './domain/content-item/entities.js';
 export * from './domain/shared/entities.js';
@@ -12,7 +13,7 @@ export * from './domain/shared/ids.js';
 // Application driven ports exports (Secondary Ports - Repositories)
 export * from './application/driven-ports/ProjectRepository.js';
 export * from './application/driven-ports/WorkspaceRepository.js';
-export * from './application/driven-ports/WebsiteRepository.js';
+export * from './application/driven-ports/ArtifactStructureRepository.js';
 export * from './application/driven-ports/ContentModelRepository.js';
 export * from './application/driven-ports/ContentItemRepository.js';
 

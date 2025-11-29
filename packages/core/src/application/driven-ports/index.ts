@@ -12,7 +12,7 @@
 
 export { ProjectRepository } from './ProjectRepository.js';
 export { WorkspaceRepository } from './WorkspaceRepository.js';
-export { WebsiteRepository } from './WebsiteRepository.js';
+export { ArtifactStructureRepository } from './ArtifactStructureRepository.js';
 export { ContentModelRepository } from './ContentModelRepository.js';
 export { ContentItemRepository, ContentItemQueryOptions, ContentItemIdType } from './ContentItemRepository.js';
 export { JobRepository } from './JobRepository.js';
