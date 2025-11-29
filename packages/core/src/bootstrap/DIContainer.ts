@@ -1,0 +1,335 @@
+/**
+ * Dependency Injection Container
+ *
+ * Central place for resolving all dependencies and creating application instances.
+ * This class manages:
+ * - Repository instances (singleton)
+ * - UseCase instances
+ * - Application facade
+ */
+
+import type { BootstrapConfig } from './types.js';
+
+// ========================================
+// Repository Interfaces (Driven Ports)
+// ========================================
+
+import type { ProjectRepository } from '../application/driven-ports/ProjectRepository.js';
+import type { WorkspaceRepository } from '../application/driven-ports/WorkspaceRepository.js';
+import type { WebsiteRepository } from '../application/driven-ports/WebsiteRepository.js';
+import type { ContentModelRepository } from '../application/driven-ports/ContentModelRepository.js';
+import type { ContentItemRepository } from '../application/driven-ports/ContentItemRepository.js';
+import type { JobRepository } from '../application/driven-ports/JobRepository.js';
+
+// ========================================
+// UseCase Imports
+// ========================================
+
+import { CreateWorkspaceUseCase } from '../application/use-cases/workspace/CreateWorkspaceUseCase.js';
+
+/**
+ * DI Container
+ *
+ * Manages all application dependencies and provides a single entry point
+ * for creating the application instance.
+ *
+ * @example
+ * ```typescript
+ * // Configure with local file-based repositories
+ * const config: BootstrapConfig = {
+ *   repositoryFactory: new LocalRepositoryFactory({
+ *     baseDir: './data'
+ *   })
+ * };
+ *
+ * // Initialize container
+ * DIContainer.initialize(config);
+ *
+ * // Create application instance
+ * const app = DIContainer.createApplication();
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // For testing: override with mock repositories
+ * DIContainer.reset();
+ * DIContainer.override({
+ *   projectRepository: new InMemoryProjectRepository()
+ * });
+ * const app = DIContainer.createApplication();
+ * ```
+ */
+export class DIContainer {
+  // ========================================
+  // Configuration
+  // ========================================
+
+  private static config: BootstrapConfig | null = null;
+
+  // ========================================
+  // Repository Singletons
+  // ========================================
+
+  private static projectRepository: ProjectRepository | null = null;
+  private static workspaceRepository: WorkspaceRepository | null = null;
+  private static websiteRepository: WebsiteRepository | null = null;
+  private static contentModelRepository: ContentModelRepository | null = null;
+  private static contentItemRepository: ContentItemRepository | null = null;
+  private static jobRepository: JobRepository | null = null;
+
+  // ========================================
+  // Initialization
+  // ========================================
+
+  /**
+   * Initialize the DI Container with configuration
+   *
+   * Must be called before creating any instances.
+   *
+   * @param config - Bootstrap configuration including repository factory
+   */
+  static initialize(config: BootstrapConfig): void {
+    this.config = config;
+  }
+
+  /**
+   * Ensure container is initialized
+   *
+   * @throws {Error} If container is not initialized
+   */
+  private static ensureInitialized(): void {
+    if (!this.config) {
+      throw new Error(
+        'DIContainer is not initialized. Call DIContainer.initialize(config) first.'
+      );
+    }
+  }
+
+  // ========================================
+  // Repository Getters (Singleton)
+  // ========================================
+
+  /**
+   * Get ProjectRepository instance (Singleton)
+   */
+  private static getProjectRepository(): ProjectRepository {
+    this.ensureInitialized();
+
+    if (!this.projectRepository) {
+      this.projectRepository = this.config!.repositoryFactory.createProjectRepository();
+    }
+    return this.projectRepository;
+  }
+
+  /**
+   * Get WorkspaceRepository instance (Singleton)
+   */
+  private static getWorkspaceRepository(): WorkspaceRepository {
+    this.ensureInitialized();
+
+    if (!this.workspaceRepository) {
+      this.workspaceRepository = this.config!.repositoryFactory.createWorkspaceRepository();
+    }
+    return this.workspaceRepository;
+  }
+
+  /**
+   * Get WebsiteRepository instance (Singleton)
+   */
+  // @ts-expect-error - This method will be used when website use cases are added
+  private static getWebsiteRepository(): WebsiteRepository {
+    this.ensureInitialized();
+
+    if (!this.websiteRepository) {
+      this.websiteRepository = this.config!.repositoryFactory.createWebsiteRepository();
+    }
+    return this.websiteRepository;
+  }
+
+  /**
+   * Get ContentModelRepository instance (Singleton)
+   */
+  // @ts-expect-error - This method will be used when content model use cases are added
+  private static getContentModelRepository(): ContentModelRepository {
+    this.ensureInitialized();
+
+    if (!this.contentModelRepository) {
+      this.contentModelRepository = this.config!.repositoryFactory.createContentModelRepository();
+    }
+    return this.contentModelRepository;
+  }
+
+  /**
+   * Get ContentItemRepository instance (Singleton)
+   */
+  // @ts-expect-error - This method will be used when content item use cases are added
+  private static getContentItemRepository(): ContentItemRepository {
+    this.ensureInitialized();
+
+    if (!this.contentItemRepository) {
+      this.contentItemRepository = this.config!.repositoryFactory.createContentItemRepository();
+    }
+    return this.contentItemRepository;
+  }
+
+  /**
+   * Get JobRepository instance (Singleton)
+   */
+  // @ts-expect-error - This method will be used when job use cases are added
+  private static getJobRepository(): JobRepository {
+    this.ensureInitialized();
+
+    if (!this.jobRepository) {
+      this.jobRepository = this.config!.repositoryFactory.createJobRepository();
+    }
+    return this.jobRepository;
+  }
+
+  // ========================================
+  // UseCase Factory Methods
+  // ========================================
+
+  /**
+   * Create CreateWorkspaceUseCase instance
+   */
+  private static createCreateWorkspaceUseCase(): CreateWorkspaceUseCase {
+    return new CreateWorkspaceUseCase(
+      this.getWorkspaceRepository(),
+      this.getProjectRepository()
+    );
+  }
+
+  // TODO: Add other UseCase factory methods as needed
+  // private static createArchiveProjectUseCase(): ArchiveProjectUseCase { ... }
+  // private static createListProjectsUseCase(): ListProjectsUseCase { ... }
+
+  // ========================================
+  // Application Factory (Entry Point)
+  // ========================================
+
+  /**
+   * Create Application instance
+   *
+   * This is the main entry point for getting a configured application instance.
+   * All dependencies are resolved and injected.
+   *
+   * @returns Application instance with all use cases
+   *
+   * @example
+   * ```typescript
+   * const app = DIContainer.createApplication();
+   * const result = await app.workspace.create({ slug: 'production' });
+   * ```
+   */
+  static createApplication(): Application {
+    this.ensureInitialized();
+
+    return new Application({
+      workspace: {
+        create: this.createCreateWorkspaceUseCase(),
+        // TODO: Add other workspace use cases
+      },
+      // TODO: Add other domain use case groups
+      // project: { ... },
+      // website: { ... },
+      // contentModel: { ... },
+      // contentItem: { ... },
+    });
+  }
+
+  // ========================================
+  // Testing Utilities
+  // ========================================
+
+  /**
+   * Reset all dependencies
+   *
+   * Useful for testing to ensure clean state between tests.
+   *
+   * @example
+   * ```typescript
+   * beforeEach(() => {
+   *   DIContainer.reset();
+   * });
+   * ```
+   */
+  static reset(): void {
+    this.config = null;
+    this.projectRepository = null;
+    this.workspaceRepository = null;
+    this.websiteRepository = null;
+    this.contentModelRepository = null;
+    this.contentItemRepository = null;
+    this.jobRepository = null;
+  }
+
+  /**
+   * Override specific dependencies
+   *
+   * Useful for testing to inject mock implementations.
+   *
+   * @param overrides - Partial repository overrides
+   *
+   * @example
+   * ```typescript
+   * DIContainer.override({
+   *   projectRepository: new InMemoryProjectRepository(),
+   *   workspaceRepository: new InMemoryWorkspaceRepository()
+   * });
+   * ```
+   */
+  static override(overrides: {
+    projectRepository?: ProjectRepository;
+    workspaceRepository?: WorkspaceRepository;
+    websiteRepository?: WebsiteRepository;
+    contentModelRepository?: ContentModelRepository;
+    contentItemRepository?: ContentItemRepository;
+    jobRepository?: JobRepository;
+  }): void {
+    if (overrides.projectRepository) this.projectRepository = overrides.projectRepository;
+    if (overrides.workspaceRepository) this.workspaceRepository = overrides.workspaceRepository;
+    if (overrides.websiteRepository) this.websiteRepository = overrides.websiteRepository;
+    if (overrides.contentModelRepository)
+      this.contentModelRepository = overrides.contentModelRepository;
+    if (overrides.contentItemRepository)
+      this.contentItemRepository = overrides.contentItemRepository;
+    if (overrides.jobRepository) this.jobRepository = overrides.jobRepository;
+  }
+}
+
+// ========================================
+// Application Facade Type
+// ========================================
+
+/**
+ * Application facade type
+ *
+ * Groups all use cases by domain for easy access.
+ */
+type ApplicationUseCases = {
+  workspace: {
+    create: CreateWorkspaceUseCase;
+    // TODO: Add other workspace use cases
+    // list: ListWorkspacesUseCase;
+    // update: UpdateWorkspaceUseCase;
+    // delete: DeleteWorkspaceUseCase;
+  };
+  // TODO: Add other domain groups
+  // project: { ... };
+  // website: { ... };
+  // contentModel: { ... };
+  // contentItem: { ... };
+};
+
+/**
+ * Application facade implementation
+ *
+ * Simple container for organizing use cases by domain.
+ */
+class Application {
+  workspace: ApplicationUseCases['workspace'];
+
+  constructor(useCases: ApplicationUseCases) {
+    this.workspace = useCases.workspace;
+  }
+}

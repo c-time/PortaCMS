@@ -1,0 +1,37 @@
+{
+  "name": "@porta-cms/cli",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "porta": "./bin/porta.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo",
+    "dev": "tsc --watch",
+    "start": "node bin/porta.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["porta-cms", "cli", "cms"],
+  "author": "",
+  "license": "ISC",
+  "description": "CLI tool for PortaCMS",
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@porta-cms/core": "*",
+    "chalk": "^5.4.1",
+    "commander": "^12.1.0",
+    "ora": "^8.1.1"
+  }
+}

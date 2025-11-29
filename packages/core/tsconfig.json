@@ -8,7 +8,6 @@
     "module": "nodenext",
     "rootDir": "./src",
     "moduleResolution": "nodenext",
-    "baseUrl": "./",
     "resolveJsonModule": true,
 
     /* Emit */
