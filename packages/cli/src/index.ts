@@ -21,6 +21,18 @@ program
   });
 
 
+// List content models command
+program
+  .command('content-model:list')
+  .description('List all content models')
+  .option('-w, --workspace <slug>', 'workspace slug', 'default')
+  .action(async (options) => {
+    console.log(chalk.cyan('Listing content models...'));
+    console.log(chalk.gray('  Workspace:'), options.workspace);
+    // TODO: Implement content model listing using core package
+  });
+
+
 // Create content model command
 program
   .command('content-model:create')
