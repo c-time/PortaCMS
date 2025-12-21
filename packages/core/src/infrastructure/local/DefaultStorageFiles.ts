@@ -59,14 +59,14 @@ export class DefaultStorageFiles implements StorageFiles {
     return join(this.contentModelDir(workspaceSlug, contentModelSlug), 'views');
   }
 
-  contentModelViewConfigFile(
+  contentModelViewSlugDir(
     workspaceSlug: WorkspaceSlug,
     contentModelSlug: ContentModelSlug,
     contentListViewSlug: ContentListViewSlug
   ): string {
     return join(
       this.contentModelViewsDir(workspaceSlug, contentModelSlug),
-      `${contentListViewSlug}.json`
+      contentListViewSlug
     );
   }
 
