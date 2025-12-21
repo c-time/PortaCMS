@@ -90,7 +90,7 @@ export const PaginationContextSchema = z.object({
       last: z.boolean().optional(),
       next: z.boolean().optional(),
       previous: z.boolean().optional(),
-      pages: 
+      pages:
         z.object( {
           number: z.number().int().min(1),
           isSeparator: z.boolean().default(false),
@@ -100,6 +100,8 @@ export const PaginationContextSchema = z.object({
     }).optional(),
     currentPage: z.number().int().min(1).default(1),
     totalPages: z.number().int().min(1).default(1),
-  })
+  });
+
+export type PaginationContext = z.infer<typeof PaginationContextSchema>;
 
 
