@@ -7,8 +7,8 @@ import { promises as fs } from 'fs';
 import { join } from 'path';
 import { LocalContentItemRepository } from '../LocalContentItemRepository.js';
 import { TestStorageFiles, createTestConfig } from './test-helpers.js';
-import type { ContentItem } from '../../domain/content-item/entities.js';
-import type { WorkspaceSlug, ContentModelSlug, ContentItemSlug, FieldSlug } from '../../domain/shared/entities.js';
+import type { ContentItem } from '../../../domain/content-item/entities.js';
+import type { WorkspaceSlug, ContentModelSlug, ContentItemSlug, FieldSlug } from '../../../domain/shared/entities.js';
 import type { ContentItemIdType } from '../../../application/driven-ports/ContentItemRepository.js';
 
 const TEST_BASE_DIR = join(process.cwd(), 'test-data', 'content-item-repo');

@@ -75,3 +75,19 @@ export type { BootstrapConfig } from './types.js';
 
 // Export factories for convenience
 export { RepositoryFactory, LocalRepositoryFactory } from '../infrastructure/factories/index.js';
+
+// Export UseCase Input/Output types for CLI usage
+export type {
+  CreateContentModelInput,
+  CreateContentModelOutput,
+} from '../application/driver-ports/content-model/CreateContentModelUseCasePort.js';
+export type {
+  ValidateContentModelsInput,
+  ValidateContentModelsOutput,
+  ContentModelValidationResult,
+} from '../application/driver-ports/content-model/ValidateContentModelsUseCasePort.js';
+export type {
+  ListContentModelsInput,
+  ListContentModelsOutput,
+  ContentModelSummary,
+} from '../application/driver-ports/content-model/ListContentModelsUseCasePort.js';

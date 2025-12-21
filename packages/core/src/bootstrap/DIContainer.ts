@@ -16,7 +16,7 @@ import type { BootstrapConfig } from './types.js';
 
 import type { ProjectRepository } from '../application/driven-ports/ProjectRepository.js';
 import type { WorkspaceRepository } from '../application/driven-ports/WorkspaceRepository.js';
-import type { WebsiteRepository } from '../application/driven-ports/WebsiteRepository.js';
+import type { BuildSpecRepository } from '../application/driven-ports/BuildSpecRepository.js';
 import type { ContentModelRepository } from '../application/driven-ports/ContentModelRepository.js';
 import type { ContentItemRepository } from '../application/driven-ports/ContentItemRepository.js';
 import type { JobRepository } from '../application/driven-ports/JobRepository.js';
@@ -26,6 +26,9 @@ import type { JobRepository } from '../application/driven-ports/JobRepository.js
 // ========================================
 
 import { CreateWorkspaceUseCase } from '../application/use-cases/workspace/CreateWorkspaceUseCase.js';
+import { CreateContentModelUseCase } from '../application/use-cases/content-model/CreateContentModelUseCase.js';
+import { ValidateContentModelsUseCase } from '../application/use-cases/content-model/ValidateContentModelsUseCase.js';
+import { ListContentModelsUseCase } from '../application/use-cases/content-model/ListContentModelsUseCase.js';
 
 /**
  * DI Container
@@ -72,7 +75,7 @@ export class DIContainer {
 
   private static projectRepository: ProjectRepository | null = null;
   private static workspaceRepository: WorkspaceRepository | null = null;
-  private static websiteRepository: WebsiteRepository | null = null;
+  private static buildSpecRepository: BuildSpecRepository | null = null;
   private static contentModelRepository: ContentModelRepository | null = null;
   private static contentItemRepository: ContentItemRepository | null = null;
   private static jobRepository: JobRepository | null = null;
@@ -134,22 +137,21 @@ export class DIContainer {
   }
 
   /**
-   * Get WebsiteRepository instance (Singleton)
+   * Get BuildSpecRepository instance (Singleton)
    */
-  // @ts-expect-error - This method will be used when website use cases are added
-  private static getWebsiteRepository(): WebsiteRepository {
+  // @ts-expect-error - This method will be used when build spec use cases are added
+  private static getBuildSpecRepository(): BuildSpecRepository {
     this.ensureInitialized();
 
-    if (!this.websiteRepository) {
-      this.websiteRepository = this.config!.repositoryFactory.createWebsiteRepository();
+    if (!this.buildSpecRepository) {
+      this.buildSpecRepository = this.config!.repositoryFactory.createBuildSpecRepository();
     }
-    return this.websiteRepository;
+    return this.buildSpecRepository;
   }
 
   /**
    * Get ContentModelRepository instance (Singleton)
    */
-  // @ts-expect-error - This method will be used when content model use cases are added
   private static getContentModelRepository(): ContentModelRepository {
     this.ensureInitialized();
 
@@ -199,6 +201,36 @@ export class DIContainer {
     );
   }
 
+  /**
+   * Create CreateContentModelUseCase instance
+   */
+  private static createCreateContentModelUseCase(): CreateContentModelUseCase {
+    return new CreateContentModelUseCase(
+      this.getWorkspaceRepository(),
+      this.getContentModelRepository()
+    );
+  }
+
+  /**
+   * Create ValidateContentModelsUseCase instance
+   */
+  private static createValidateContentModelsUseCase(): ValidateContentModelsUseCase {
+    return new ValidateContentModelsUseCase(
+      this.getWorkspaceRepository(),
+      this.getContentModelRepository()
+    );
+  }
+
+  /**
+   * Create ListContentModelsUseCase instance
+   */
+  private static createListContentModelsUseCase(): ListContentModelsUseCase {
+    return new ListContentModelsUseCase(
+      this.getWorkspaceRepository(),
+      this.getContentModelRepository()
+    );
+  }
+
   // TODO: Add other UseCase factory methods as needed
   // private static createArchiveProjectUseCase(): ArchiveProjectUseCase { ... }
   // private static createListProjectsUseCase(): ListProjectsUseCase { ... }
@@ -229,10 +261,15 @@ export class DIContainer {
         create: this.createCreateWorkspaceUseCase(),
         // TODO: Add other workspace use cases
       },
+      contentModel: {
+        create: this.createCreateContentModelUseCase(),
+        validate: this.createValidateContentModelsUseCase(),
+        list: this.createListContentModelsUseCase(),
+        // TODO: Add other content model use cases
+      },
       // TODO: Add other domain use case groups
       // project: { ... },
       // website: { ... },
-      // contentModel: { ... },
       // contentItem: { ... },
     });
   }
@@ -257,7 +294,7 @@ export class DIContainer {
     this.config = null;
     this.projectRepository = null;
     this.workspaceRepository = null;
-    this.websiteRepository = null;
+    this.buildSpecRepository = null;
     this.contentModelRepository = null;
     this.contentItemRepository = null;
     this.jobRepository = null;
@@ -281,14 +318,14 @@ export class DIContainer {
   static override(overrides: {
     projectRepository?: ProjectRepository;
     workspaceRepository?: WorkspaceRepository;
-    websiteRepository?: WebsiteRepository;
+    buildSpecRepository?: BuildSpecRepository;
     contentModelRepository?: ContentModelRepository;
     contentItemRepository?: ContentItemRepository;
     jobRepository?: JobRepository;
   }): void {
     if (overrides.projectRepository) this.projectRepository = overrides.projectRepository;
     if (overrides.workspaceRepository) this.workspaceRepository = overrides.workspaceRepository;
-    if (overrides.websiteRepository) this.websiteRepository = overrides.websiteRepository;
+    if (overrides.buildSpecRepository) this.buildSpecRepository = overrides.buildSpecRepository;
     if (overrides.contentModelRepository)
       this.contentModelRepository = overrides.contentModelRepository;
     if (overrides.contentItemRepository)
@@ -314,10 +351,17 @@ type ApplicationUseCases = {
     // update: UpdateWorkspaceUseCase;
     // delete: DeleteWorkspaceUseCase;
   };
+  contentModel: {
+    create: CreateContentModelUseCase;
+    validate: ValidateContentModelsUseCase;
+    list: ListContentModelsUseCase;
+    // TODO: Add other content model use cases
+    // update: UpdateContentModelUseCase;
+    // delete: DeleteContentModelUseCase;
+  };
   // TODO: Add other domain groups
   // project: { ... };
   // website: { ... };
-  // contentModel: { ... };
   // contentItem: { ... };
 };
 
@@ -328,8 +372,10 @@ type ApplicationUseCases = {
  */
 class Application {
   workspace: ApplicationUseCases['workspace'];
+  contentModel: ApplicationUseCases['contentModel'];
 
   constructor(useCases: ApplicationUseCases) {
     this.workspace = useCases.workspace;
+    this.contentModel = useCases.contentModel;
   }
 }

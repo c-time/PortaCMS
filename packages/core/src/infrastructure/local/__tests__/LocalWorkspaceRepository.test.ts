@@ -7,8 +7,8 @@ import { promises as fs } from 'fs';
 import { join } from 'path';
 import { LocalWorkspaceRepository } from '../LocalWorkspaceRepository.js';
 import { TestStorageFiles, createTestConfig } from './test-helpers.js';
-import type { Workspace } from '../../domain/workspace/entities.js';
-import type { WorkspaceSlug } from '../../domain/shared/entities.js';
+import type { Workspace } from '../../../domain/workspace/entities.js';
+import type { WorkspaceSlug } from '../../../domain/shared/entities.js';
 
 const TEST_BASE_DIR = join(process.cwd(), 'test-data', 'workspace-repo');
 

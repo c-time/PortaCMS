@@ -99,6 +99,23 @@ export async function listFiles(dirPath: string): Promise<string[]> {
 }
 
 /**
+ * Lists all subdirectories in a directory
+ */
+export async function listDirectories(dirPath: string): Promise<string[]> {
+  try {
+    const entries = await fs.readdir(dirPath, { withFileTypes: true });
+    return entries
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      return [];
+    }
+    throw error;
+  }
+}
+
+/**
  * Builds a full file path from base directory and relative path components
  */
 export function buildPath(baseDir: string, ...paths: string[]): string {

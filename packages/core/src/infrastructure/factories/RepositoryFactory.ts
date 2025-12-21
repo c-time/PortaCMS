@@ -7,7 +7,7 @@
 
 import type { ProjectRepository } from '../../application/driven-ports/ProjectRepository.js';
 import type { WorkspaceRepository } from '../../application/driven-ports/WorkspaceRepository.js';
-import type { WebsiteRepository } from '../../application/driven-ports/WebsiteRepository.js';
+import type { BuildSpecRepository } from '../../application/driven-ports/BuildSpecRepository.js';
 import type { ContentModelRepository } from '../../application/driven-ports/ContentModelRepository.js';
 import type { ContentItemRepository } from '../../application/driven-ports/ContentItemRepository.js';
 import type { JobRepository } from '../../application/driven-ports/JobRepository.js';
@@ -30,9 +30,9 @@ export interface RepositoryFactory {
   createWorkspaceRepository(): WorkspaceRepository;
 
   /**
-   * Create a WebsiteRepository instance
+   * Create a BuildSpecRepository instance
    */
-  createWebsiteRepository(): WebsiteRepository;
+  createBuildSpecRepository(): BuildSpecRepository;
 
   /**
    * Create a ContentModelRepository instance
