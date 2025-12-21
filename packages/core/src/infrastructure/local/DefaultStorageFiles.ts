@@ -36,8 +36,8 @@ export class DefaultStorageFiles implements StorageFiles {
     return join(this.workspacesDir(), workspaceSlug, 'workspace.json');
   }
 
-  websiteConfigFile(workspaceSlug: WorkspaceSlug): string {
-    return join(this.workspacesDir(), workspaceSlug, 'website.json');
+  artifactStructureConfigFile(workspaceSlug: WorkspaceSlug): string {
+    return join(this.workspacesDir(), workspaceSlug, 'artifact-structure.json');
   }
 
   contentModelsDir(workspaceSlug: WorkspaceSlug): string {

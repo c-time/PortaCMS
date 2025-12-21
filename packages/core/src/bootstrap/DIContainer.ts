@@ -16,7 +16,7 @@ import type { BootstrapConfig } from './types.js';
 
 import type { ProjectRepository } from '../application/driven-ports/ProjectRepository.js';
 import type { WorkspaceRepository } from '../application/driven-ports/WorkspaceRepository.js';
-import type { WebsiteRepository } from '../application/driven-ports/WebsiteRepository.js';
+import type { ArtifactStructureRepository } from '../application/driven-ports/ArtifactStructureRepository.js';
 import type { ContentModelRepository } from '../application/driven-ports/ContentModelRepository.js';
 import type { ContentItemRepository } from '../application/driven-ports/ContentItemRepository.js';
 import type { JobRepository } from '../application/driven-ports/JobRepository.js';
@@ -72,7 +72,7 @@ export class DIContainer {
 
   private static projectRepository: ProjectRepository | null = null;
   private static workspaceRepository: WorkspaceRepository | null = null;
-  private static websiteRepository: WebsiteRepository | null = null;
+  private static artifactStructureRepository: ArtifactStructureRepository | null = null;
   private static contentModelRepository: ContentModelRepository | null = null;
   private static contentItemRepository: ContentItemRepository | null = null;
   private static jobRepository: JobRepository | null = null;
@@ -134,16 +134,16 @@ export class DIContainer {
   }
 
   /**
-   * Get WebsiteRepository instance (Singleton)
+   * Get ArtifactStructureRepository instance (Singleton)
    */
-  // @ts-expect-error - This method will be used when website use cases are added
-  private static getWebsiteRepository(): WebsiteRepository {
+  // @ts-expect-error - This method will be used when artifact structure use cases are added
+  private static getArtifactStructureRepository(): ArtifactStructureRepository {
     this.ensureInitialized();
 
-    if (!this.websiteRepository) {
-      this.websiteRepository = this.config!.repositoryFactory.createWebsiteRepository();
+    if (!this.artifactStructureRepository) {
+      this.artifactStructureRepository = this.config!.repositoryFactory.createArtifactStructureRepository();
     }
-    return this.websiteRepository;
+    return this.artifactStructureRepository;
   }
 
   /**
@@ -257,7 +257,7 @@ export class DIContainer {
     this.config = null;
     this.projectRepository = null;
     this.workspaceRepository = null;
-    this.websiteRepository = null;
+    this.artifactStructureRepository = null;
     this.contentModelRepository = null;
     this.contentItemRepository = null;
     this.jobRepository = null;
@@ -281,14 +281,14 @@ export class DIContainer {
   static override(overrides: {
     projectRepository?: ProjectRepository;
     workspaceRepository?: WorkspaceRepository;
-    websiteRepository?: WebsiteRepository;
+    artifactStructureRepository?: ArtifactStructureRepository;
     contentModelRepository?: ContentModelRepository;
     contentItemRepository?: ContentItemRepository;
     jobRepository?: JobRepository;
   }): void {
     if (overrides.projectRepository) this.projectRepository = overrides.projectRepository;
     if (overrides.workspaceRepository) this.workspaceRepository = overrides.workspaceRepository;
-    if (overrides.websiteRepository) this.websiteRepository = overrides.websiteRepository;
+    if (overrides.artifactStructureRepository) this.artifactStructureRepository = overrides.artifactStructureRepository;
     if (overrides.contentModelRepository)
       this.contentModelRepository = overrides.contentModelRepository;
     if (overrides.contentItemRepository)

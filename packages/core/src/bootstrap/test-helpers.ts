@@ -7,7 +7,7 @@
 import { DIContainer } from './DIContainer.js';
 import type { ProjectRepository } from '../application/driven-ports/ProjectRepository.js';
 import type { WorkspaceRepository } from '../application/driven-ports/WorkspaceRepository.js';
-import type { WebsiteRepository } from '../application/driven-ports/WebsiteRepository.js';
+import type { ArtifactStructureRepository } from '../application/driven-ports/ArtifactStructureRepository.js';
 import type { ContentModelRepository } from '../application/driven-ports/ContentModelRepository.js';
 import type { ContentItemRepository } from '../application/driven-ports/ContentItemRepository.js';
 import type { JobRepository } from '../application/driven-ports/JobRepository.js';
@@ -52,7 +52,7 @@ export function resetDIContainer(): void {
 export function overrideDependencies(overrides: {
   projectRepository?: ProjectRepository;
   workspaceRepository?: WorkspaceRepository;
-  websiteRepository?: WebsiteRepository;
+  artifactStructureRepository?: ArtifactStructureRepository;
   contentModelRepository?: ContentModelRepository;
   contentItemRepository?: ContentItemRepository;
   jobRepository?: JobRepository;
@@ -83,7 +83,7 @@ export function setupTestDIContainer(
   overrides?: {
     projectRepository?: ProjectRepository;
     workspaceRepository?: WorkspaceRepository;
-    websiteRepository?: WebsiteRepository;
+    artifactStructureRepository?: ArtifactStructureRepository;
     contentModelRepository?: ContentModelRepository;
     contentItemRepository?: ContentItemRepository;
     jobRepository?: JobRepository;
