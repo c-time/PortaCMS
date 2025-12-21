@@ -41,6 +41,18 @@ program
     // TODO: Implement content model creation using core package
   });
 
+// Validate content model command
+program
+  .command('content-model:validate')
+  .description('Validate all existing content models')
+  .option('-w, --workspace <slug>', 'workspace slug', 'default')
+  .action(async (options) => {
+    console.log(chalk.cyan('Validating content models...'));
+    console.log(chalk.gray('  Workspace:'), options.workspace);
+    // TODO: Implement content model validation using core package
+  });
+
+
 // Example command (keeping for reference)
 program
   .command('hello')
