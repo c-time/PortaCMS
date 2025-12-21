@@ -37,5 +37,6 @@ coverage/
 # Test data (CLI test runs)
 test-data/
 porta-data/
+validate-test/
 
 .claude/settings.local.json

@@ -3,6 +3,7 @@ import { Command, Option } from 'commander';
 import chalk from 'chalk';
 import { initCommand } from './commands/init.js';
 import { createContentModelCommand } from './commands/contentModel.js';
+import { validateContentModelsCommand } from './commands/validateContentModels.js';
 
 const program = new Command();
 
@@ -58,10 +59,9 @@ program
   .command('content-model:validate')
   .description('Validate all existing content models')
   .option('-w, --workspace <slug>', 'workspace slug', 'default')
+  .option('-d, --dir <directory>', 'data directory', './porta-data')
   .action(async (options) => {
-    console.log(chalk.cyan('Validating content models...'));
-    console.log(chalk.gray('  Workspace:'), options.workspace);
-    // TODO: Implement content model validation using core package
+    await validateContentModelsCommand(options);
   });
 
 

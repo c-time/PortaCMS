@@ -81,3 +81,8 @@ export type {
   CreateContentModelInput,
   CreateContentModelOutput,
 } from '../application/driver-ports/content-model/CreateContentModelUseCasePort.js';
+export type {
+  ValidateContentModelsInput,
+  ValidateContentModelsOutput,
+  ContentModelValidationResult,
+} from '../application/driver-ports/content-model/ValidateContentModelsUseCasePort.js';

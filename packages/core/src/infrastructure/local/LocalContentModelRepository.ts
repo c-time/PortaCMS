@@ -18,7 +18,7 @@ import {
   writeJsonFile,
   deleteFile,
   fileExists,
-  listFiles,
+  listDirectories,
   ensureDirectory,
   serialize,
 } from './utils.js';
@@ -34,16 +34,16 @@ function getContentModelDateFields(data: unknown): string[] {
     // List content models have nested date fields in structures
     return [
       ...dateFields,
-      'listContentModelStructure.contentItemStructure.createdAt',
-      'listContentModelStructure.contentItemStructure.updatedAt',
-      'listContentModelStructure.contentListViewStructure.*.createdAt',
-      'listContentModelStructure.contentListViewStructure.*.updatedAt',
+      'contentItemStructure.createdAt',
+      'contentItemStructure.updatedAt',
+      'contentListViewStructure.*.createdAt',
+      'contentListViewStructure.*.updatedAt',
     ];
   } else if (model.modelType === 'object') {
     return [
       ...dateFields,
-      'objectContentModelStructure.contentItemStructure.createdAt',
-      'objectContentModelStructure.contentItemStructure.updatedAt',
+      'contentItemStructure.createdAt',
+      'contentItemStructure.updatedAt',
     ];
   }
 
@@ -130,13 +130,15 @@ export class LocalContentModelRepository implements ContentModelRepository {
       await ensureDirectory(contentModelsDir);
     }
 
-    const files = await listFiles(contentModelsDir);
+    const subdirs = await listDirectories(contentModelsDir);
     const contentModels: ContentModel[] = [];
 
-    for (const file of files) {
-      if (file.endsWith('.json')) {
-        const filePath = join(contentModelsDir, file);
-        const data = await readJsonFile<unknown>(filePath);
+    for (const subdir of subdirs) {
+      // Each subdirectory is a content model slug
+      const modelFile = join(contentModelsDir, subdir, 'model.json');
+
+      if (await fileExists(modelFile)) {
+        const data = await readJsonFile<unknown>(modelFile);
         if (data) {
           const dateFields = getContentModelDateFields(data);
           const contentModel = convertDates(data, dateFields) as ContentModel;
