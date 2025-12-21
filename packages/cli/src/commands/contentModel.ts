@@ -1,9 +1,9 @@
 /**
- * Content Model commands - Create and validate content models in a workspace
+ * Content Model commands - Create, list, and validate content models in a workspace
  */
 
 import { configureApp, LocalRepositoryFactory } from '@porta-cms/core';
-import type { CreateContentModelInput, ValidateContentModelsInput } from '@porta-cms/core';
+import type { CreateContentModelInput, ValidateContentModelsInput, ListContentModelsInput } from '@porta-cms/core';
 import chalk from 'chalk';
 import ora from 'ora';
 import { join } from 'path';
@@ -162,6 +162,109 @@ export async function validateContentModelsCommand(options: ValidateContentModel
     }
   } catch (error) {
     spinner.fail(chalk.red('Failed to validate content models'));
+
+    if (error instanceof Error) {
+      console.error(chalk.red('Error:'), error.message);
+    } else {
+      console.error(chalk.red('Unknown error occurred'));
+    }
+
+    process.exit(1);
+  }
+}
+
+// ========================================
+// List Content Models Command
+// ========================================
+
+export interface ListContentModelsOptions {
+  workspace?: string;
+  dir?: string;
+}
+
+/**
+ * List all content models in a workspace
+ */
+export async function listContentModelsCommand(options: ListContentModelsOptions) {
+  const baseDir = options.dir || './porta-data';
+
+  const spinner = ora('Loading content models...').start();
+
+  try {
+    // Configure application with local file-based repositories
+    const app = configureApp({
+      repositoryFactory: new LocalRepositoryFactory({
+        baseDir: join(process.cwd(), baseDir),
+        prettyPrint: true,
+        autoCreateDirectories: true,
+      }),
+    });
+
+    // Prepare input
+    const input: ListContentModelsInput = {
+      workspaceSlug: options.workspace || 'default',
+    } as ListContentModelsInput;
+
+    // Execute list content models use case
+    const result = await app.contentModel.list.execute(input);
+
+    spinner.succeed(chalk.green(`Found ${result.totalCount} content model(s)`));
+
+    console.log();
+    console.log(chalk.bold('Content Models Summary:'));
+    console.log(chalk.gray('  Workspace:'), result.workspaceSlug);
+    console.log(chalk.gray('  Total:'), result.totalCount);
+    console.log(chalk.gray('  List models:'), result.listCount);
+    console.log(chalk.gray('  Object models:'), result.objectCount);
+    console.log();
+
+    if (result.totalCount > 0) {
+      console.log(chalk.bold('Models:'));
+
+      // Group by type
+      const listModels = result.contentModels.filter(m => m.modelType === 'list');
+      const objectModels = result.contentModels.filter(m => m.modelType === 'object');
+
+      if (listModels.length > 0) {
+        console.log();
+        console.log(chalk.bold.cyan('  List Models:'));
+        listModels.forEach(model => {
+          console.log(
+            chalk.cyan('    •'),
+            chalk.bold(model.slug),
+            chalk.gray(`- ${model.label}`)
+          );
+          if (model.description) {
+            console.log(chalk.gray(`      ${model.description}`));
+          }
+          console.log(
+            chalk.gray(`      Status: ${model.isActive ? 'Active' : 'Inactive'}`)
+          );
+        });
+      }
+
+      if (objectModels.length > 0) {
+        console.log();
+        console.log(chalk.bold.magenta('  Object Models:'));
+        objectModels.forEach(model => {
+          console.log(
+            chalk.magenta('    •'),
+            chalk.bold(model.slug),
+            chalk.gray(`- ${model.label}`)
+          );
+          if (model.description) {
+            console.log(chalk.gray(`      ${model.description}`));
+          }
+          console.log(
+            chalk.gray(`      Status: ${model.isActive ? 'Active' : 'Inactive'}`)
+          );
+        });
+      }
+
+      console.log();
+    }
+  } catch (error) {
+    spinner.fail(chalk.red('Failed to list content models'));
 
     if (error instanceof Error) {
       console.error(chalk.red('Error:'), error.message);

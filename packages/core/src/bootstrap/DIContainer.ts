@@ -28,6 +28,7 @@ import type { JobRepository } from '../application/driven-ports/JobRepository.js
 import { CreateWorkspaceUseCase } from '../application/use-cases/workspace/CreateWorkspaceUseCase.js';
 import { CreateContentModelUseCase } from '../application/use-cases/content-model/CreateContentModelUseCase.js';
 import { ValidateContentModelsUseCase } from '../application/use-cases/content-model/ValidateContentModelsUseCase.js';
+import { ListContentModelsUseCase } from '../application/use-cases/content-model/ListContentModelsUseCase.js';
 
 /**
  * DI Container
@@ -220,6 +221,16 @@ export class DIContainer {
     );
   }
 
+  /**
+   * Create ListContentModelsUseCase instance
+   */
+  private static createListContentModelsUseCase(): ListContentModelsUseCase {
+    return new ListContentModelsUseCase(
+      this.getWorkspaceRepository(),
+      this.getContentModelRepository()
+    );
+  }
+
   // TODO: Add other UseCase factory methods as needed
   // private static createArchiveProjectUseCase(): ArchiveProjectUseCase { ... }
   // private static createListProjectsUseCase(): ListProjectsUseCase { ... }
@@ -253,6 +264,7 @@ export class DIContainer {
       contentModel: {
         create: this.createCreateContentModelUseCase(),
         validate: this.createValidateContentModelsUseCase(),
+        list: this.createListContentModelsUseCase(),
         // TODO: Add other content model use cases
       },
       // TODO: Add other domain use case groups
@@ -342,8 +354,8 @@ type ApplicationUseCases = {
   contentModel: {
     create: CreateContentModelUseCase;
     validate: ValidateContentModelsUseCase;
+    list: ListContentModelsUseCase;
     // TODO: Add other content model use cases
-    // list: ListContentModelsUseCase;
     // update: UpdateContentModelUseCase;
     // delete: DeleteContentModelUseCase;
   };

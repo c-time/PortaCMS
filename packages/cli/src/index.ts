@@ -2,7 +2,7 @@
 import { Command, Option } from 'commander';
 import chalk from 'chalk';
 import { initCommand } from './commands/init.js';
-import { createContentModelCommand, validateContentModelsCommand } from './commands/contentModel.js';
+import { createContentModelCommand, validateContentModelsCommand, listContentModelsCommand } from './commands/contentModel.js';
 
 const program = new Command();
 
@@ -27,10 +27,9 @@ program
   .command('content-model:list')
   .description('List all content models')
   .option('-w, --workspace <slug>', 'workspace slug', 'default')
+  .option('-d, --dir <directory>', 'data directory', './porta-data')
   .action(async (options) => {
-    console.log(chalk.cyan('Listing content models...'));
-    console.log(chalk.gray('  Workspace:'), options.workspace);
-    // TODO: Implement content model listing using core package
+    await listContentModelsCommand(options);
   });
 
 
