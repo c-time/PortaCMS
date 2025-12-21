@@ -58,10 +58,10 @@ export const WebsiteSchema = z.object({
 });
 
 // Root entity schema
-export const ArtifactStructureSchema = z.object({
+export const BuildSpecSchema = z.object({
   name: z.string()
-    .min(1, { message: "ArtifactStructure name is required" })
-    .max(100, { message: "ArtifactStructure name must not exceed 100 characters" }),
+    .min(1, { message: "BuildSpec name is required" })
+    .max(100, { message: "BuildSpec name must not exceed 100 characters" }),
   description: z.string()
     .max(500, { message: "Description must not exceed 500 characters" })
     .optional(),
@@ -76,4 +76,4 @@ export type MapperOutput = z.infer<typeof MapperOutputSchema>;
 export type Mapper = z.infer<typeof MapperSchema>;
 export type Page = z.infer<typeof PageSchema>;
 export type Website = z.infer<typeof WebsiteSchema>;
-export type ArtifactStructure = z.infer<typeof ArtifactStructureSchema>;
+export type BuildSpec = z.infer<typeof BuildSpecSchema>;

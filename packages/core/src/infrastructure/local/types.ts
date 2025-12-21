@@ -42,8 +42,8 @@ export interface StorageFiles {
   workspacesDir: () => string;
   workspaceConfigFile: (workspaceSlug: WorkspaceSlug) => string;
 
-  // ArtifactStructure
-  artifactStructureConfigFile: (workspaceSlug: WorkspaceSlug) => string;
+  // BuildSpec
+  buildSpecConfigFile: (workspaceSlug: WorkspaceSlug) => string;
 
   // Content Models - returns: workspaces/{workspaceSlug}/contents/
   contentModelsDir: (workspaceSlug: WorkspaceSlug) => string;

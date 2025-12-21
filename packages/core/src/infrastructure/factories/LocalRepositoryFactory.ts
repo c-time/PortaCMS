@@ -9,14 +9,14 @@ import type { LocalStorageConfig, StorageFiles } from '../local/types.js';
 
 import { LocalProjectRepository } from '../local/LocalProjectRepository.js';
 import { LocalWorkspaceRepository } from '../local/LocalWorkspaceRepository.js';
-import { LocalArtifactStructureRepository } from '../local/LocalArtifactStructureRepository.js';
+import { LocalBuildSpecRepository } from '../local/LocalBuildSpecRepository.js';
 import { LocalContentModelRepository } from '../local/LocalContentModelRepository.js';
 import { LocalContentItemRepository } from '../local/LocalContentItemRepository.js';
 import { DefaultStorageFiles } from '../local/DefaultStorageFiles.js';
 
 import type { ProjectRepository } from '../../application/driven-ports/ProjectRepository.js';
 import type { WorkspaceRepository } from '../../application/driven-ports/WorkspaceRepository.js';
-import type { ArtifactStructureRepository } from '../../application/driven-ports/ArtifactStructureRepository.js';
+import type { BuildSpecRepository } from '../../application/driven-ports/BuildSpecRepository.js';
 import type { ContentModelRepository } from '../../application/driven-ports/ContentModelRepository.js';
 import type { ContentItemRepository } from '../../application/driven-ports/ContentItemRepository.js';
 import type { JobRepository } from '../../application/driven-ports/JobRepository.js';
@@ -48,8 +48,8 @@ export class LocalRepositoryFactory implements RepositoryFactory {
     return new LocalWorkspaceRepository(this.storageFiles, this.config);
   }
 
-  createArtifactStructureRepository(): ArtifactStructureRepository {
-    return new LocalArtifactStructureRepository(this.storageFiles, this.config);
+  createBuildSpecRepository(): BuildSpecRepository {
+    return new LocalBuildSpecRepository(this.storageFiles, this.config);
   }
 
   createContentModelRepository(): ContentModelRepository {
