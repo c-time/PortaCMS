@@ -2,6 +2,7 @@
 import { Command, Option } from 'commander';
 import chalk from 'chalk';
 import { initCommand } from './commands/init.js';
+import { createContentModelCommand } from './commands/contentModel.js';
 
 const program = new Command();
 
@@ -45,12 +46,11 @@ program
       .makeOptionMandatory()
   )
   .option('-w, --workspace <slug>', 'workspace slug', 'default')
+  .option('-d, --dir <directory>', 'data directory', './porta-data')
+  .option('-s, --slug <slug>', 'custom slug (auto-generated from name if not provided)')
+  .option('--description <description>', 'content model description')
   .action(async (options) => {
-    console.log(chalk.cyan('Creating content model...'));
-    console.log(chalk.gray('  Name:'), options.name);
-    console.log(chalk.gray('  Type:'), options.type);
-    console.log(chalk.gray('  Workspace:'), options.workspace);
-    // TODO: Implement content model creation using core package
+    await createContentModelCommand(options);
   });
 
 // Validate content model command
