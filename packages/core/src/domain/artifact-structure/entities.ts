@@ -53,7 +53,7 @@ const PageSchema = z.object({
 
 });
 
-export const PagesStructureSchema = z.object({
+export const WebsiteSchema = z.object({
   pages: z.array(PageSchema).default([]),
 });
 
@@ -65,7 +65,7 @@ export const ArtifactStructureSchema = z.object({
   description: z.string()
     .max(500, { message: "Description must not exceed 500 characters" })
     .optional(),
-  pagesStructure: PagesStructureSchema,
+  website: WebsiteSchema,
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -75,5 +75,5 @@ export type MapperInput = z.infer<typeof MapperInputSchema>;
 export type MapperOutput = z.infer<typeof MapperOutputSchema>;
 export type Mapper = z.infer<typeof MapperSchema>;
 export type Page = z.infer<typeof PageSchema>;
-export type PagesStructure = z.infer<typeof PagesStructureSchema>;
+export type Website = z.infer<typeof WebsiteSchema>;
 export type ArtifactStructure = z.infer<typeof ArtifactStructureSchema>;
