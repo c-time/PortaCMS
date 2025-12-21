@@ -2,8 +2,7 @@
 import { Command, Option } from 'commander';
 import chalk from 'chalk';
 import { initCommand } from './commands/init.js';
-import { createContentModelCommand } from './commands/contentModel.js';
-import { validateContentModelsCommand } from './commands/validateContentModels.js';
+import { createContentModelCommand, validateContentModelsCommand } from './commands/contentModel.js';
 
 const program = new Command();
 
