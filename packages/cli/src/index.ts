@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 import chalk from 'chalk';
 import { initCommand } from './commands/init.js';
 
@@ -18,6 +18,27 @@ program
   .option('-w, --workspace <slug>', 'initial workspace slug', 'default')
   .action(async (options) => {
     await initCommand(options);
+  });
+
+
+// Create content model command
+program
+  .command('content-model:create')
+  .description('Create a new content model')
+  .requiredOption('-n, --name <name>', 'content model name')
+  .addOption(
+    new Option('-t, --type <type>', 'content model type')
+      .choices(['list', 'object'])
+      .default('list')
+      .makeOptionMandatory()
+  )
+  .option('-w, --workspace <slug>', 'workspace slug', 'default')
+  .action(async (options) => {
+    console.log(chalk.cyan('Creating content model...'));
+    console.log(chalk.gray('  Name:'), options.name);
+    console.log(chalk.gray('  Type:'), options.type);
+    console.log(chalk.gray('  Workspace:'), options.workspace);
+    // TODO: Implement content model creation using core package
   });
 
 // Example command (keeping for reference)
