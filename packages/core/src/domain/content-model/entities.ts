@@ -152,7 +152,8 @@ export const ContentItemStructureSchema = z.object({
 });
 
 // Content list view structure
-export const ContentListViewStructureSchema = z.object({
+
+const BaseContentListViewStructureSchema = z.object({
   slug: ContentListViewSlugSchema,
   name: z.string()
     .min(1, { message: "View structure name is required" })
@@ -163,12 +164,25 @@ export const ContentListViewStructureSchema = z.object({
   fields: z.array(FieldSlugSchema).min(1, { message: "At least one field must be selected for the view" }),
   sortFields: z.array(SortFieldSchema).default([]),
   filterRules: z.array(FilterRuleSchema).default([]),
-  groupByFields: z.array(FieldSlugSchema).default([]),
-  pagination: PaginationConfigSchema,
+//  groupByFields: z.array(FieldSlugSchema).default([]),
   isActive: z.boolean().default(true),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
+
+const PaginatedContentListViewStructureSchema = z.object({
+  type: z.literal('paginated'),
+  pagination: PaginationConfigSchema,
+}).extend(BaseContentListViewStructureSchema.shape);
+
+const BoundedContentListViewStructureSchema = z.object({
+  type: z.literal('bounded'),
+  limit: z.number().int().min(1).max(1000),
+  offset: z.number().int().min(0),
+}).extend(BaseContentListViewStructureSchema.shape);
+
+
+export const ContentListViewStructureSchema = PaginatedContentListViewStructureSchema.or(BoundedContentListViewStructureSchema);
 
 // Base content model schema
 export const BaseContentModelSchema = z.object({

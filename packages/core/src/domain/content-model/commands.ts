@@ -2022,16 +2022,10 @@ export function updateContentListView(
 
   const currentView = prevState.contentListViewStructure[viewIndex]!;
   const updatedView: ContentListViewStructure = {
-    slug: currentView.slug,
+    ...currentView,
     name: params.name !== undefined ? params.name : currentView.name,
     description: params.description !== undefined ? params.description : currentView.description,
-    fields: currentView.fields,
-    sortFields: currentView.sortFields,
-    filterRules: currentView.filterRules,
-    groupByFields: currentView.groupByFields,
-    pagination: currentView.pagination,
     isActive: params.isActive !== undefined ? params.isActive : currentView.isActive,
-    createdAt: currentView.createdAt,
     updatedAt: params.updatedAt,
   };
 
@@ -2094,16 +2088,8 @@ export function updateSortFields(
 
   const currentView = prevState.contentListViewStructure[viewIndex]!;
   const updatedView: ContentListViewStructure = {
-    slug: currentView.slug,
-    name: currentView.name,
-    description: currentView.description,
-    fields: currentView.fields,
+    ...currentView,
     sortFields: params.sortFields,
-    filterRules: currentView.filterRules,
-    groupByFields: currentView.groupByFields,
-    pagination: currentView.pagination,
-    isActive: currentView.isActive,
-    createdAt: currentView.createdAt,
     updatedAt: params.updatedAt,
   };
 
@@ -2166,16 +2152,8 @@ export function updateFilterRules(
 
   const currentView = prevState.contentListViewStructure[viewIndex]!;
   const updatedView: ContentListViewStructure = {
-    slug: currentView.slug,
-    name: currentView.name,
-    description: currentView.description,
-    fields: currentView.fields,
-    sortFields: currentView.sortFields,
+    ...currentView,
     filterRules: params.filterRules,
-    groupByFields: currentView.groupByFields,
-    pagination: currentView.pagination,
-    isActive: currentView.isActive,
-    createdAt: currentView.createdAt,
     updatedAt: params.updatedAt,
   };
 
@@ -2237,17 +2215,14 @@ export function updatePaginationConfig(
   }
 
   const currentView = prevState.contentListViewStructure[viewIndex]!;
+
+  if (currentView.type !== 'paginated') {
+    throw new Error('Cannot update pagination config for non-paginated view');
+  }
+
   const updatedView: ContentListViewStructure = {
-    slug: currentView.slug,
-    name: currentView.name,
-    description: currentView.description,
-    fields: currentView.fields,
-    sortFields: currentView.sortFields,
-    filterRules: currentView.filterRules,
-    groupByFields: currentView.groupByFields,
+    ...currentView,
     pagination: params.paginationConfig,
-    isActive: currentView.isActive,
-    createdAt: currentView.createdAt,
     updatedAt: params.updatedAt,
   };
 
@@ -2310,16 +2285,8 @@ export function changeContentListViewFieldOrder(
 
   const currentView = prevState.contentListViewStructure[viewIndex]!;
   const updatedView: ContentListViewStructure = {
-    slug: currentView.slug,
-    name: currentView.name,
-    description: currentView.description,
+    ...currentView,
     fields: params.orderedFieldSlugs,
-    sortFields: currentView.sortFields,
-    filterRules: currentView.filterRules,
-    groupByFields: currentView.groupByFields,
-    pagination: currentView.pagination,
-    isActive: currentView.isActive,
-    createdAt: currentView.createdAt,
     updatedAt: params.updatedAt,
   };
 
