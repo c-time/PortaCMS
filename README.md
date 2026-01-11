@@ -372,6 +372,53 @@ PortaCMSには3つの登場人物がいます:
 4. BuildArtifactに生成ファイルパスを記録
 ```
 
+**`porta build` コマンド実行時の詳細処理**:
+
+```
+porta build 実行
+  ↓
+1. BuildSpec読み込み・検証
+   - build-spec.jsonの妥当性チェック（Zod Schema）
+   - 参照されているContentListViewの存在確認
+   - Mapper定義の整合性検証
+  ↓
+2. フェーズ1: ContentListView生成
+   - 各ContentModelのcontentListViewStructure配列を読み込み
+   - ContentItemsを取得（status=published等でフィルタ）
+   - filterRulesに基づいてアイテムをフィルタ
+   - sortFieldsに基づいてソート（複数フィールド対応）
+   - 指定されたfieldsのみ抽出
+   - Virtual Fieldsを評価（JSONata式実行）
+   - paginated型: ページごとに分割 → views/{view-slug}/page-{n}.json
+   - bounded型: limit/offset適用 → views/{view-slug}/data.json
+  ↓
+3. フェーズ2: PageContentView生成
+   - BuildSpec.pages[]を順次処理（並列処理オプション対応）
+   - Mapper.inputからデータ取得:
+     - iterator: ContentListViewを読み込み
+     - objectContents: Object型ContentModelを読み込み
+     - views: 参照するContentListViewを読み込み
+     - context: 定数と計算プロパティを評価（JSONata）
+   - Iterator戦略に応じてループ:
+     - perItem: 各アイテムでPageContentView生成 → Item型
+     - perPage: 各ページでPageContentView生成 → Index型
+     - なし: 1回のみPageContentView生成 → Static型
+   - Mapper.outputでファイル名生成（JSONata評価）
+   - pages/ディレクトリに出力
+   - --skip-if-identical: 既存ファイルと内容比較、同一ならスキップ
+  ↓
+4. BuildArtifact保存
+   - 生成ファイルパス一覧を記録
+   - ソースファイルのタイムスタンプを保存（増分ビルド用）
+   - ビルド成功/失敗情報を記録
+  ↓
+5. 結果サマリー表示
+   - ContentListView: 生成成功/失敗件数
+   - PageContentView: 生成成功/失敗件数
+   - エラー詳細（あれば全て表示）
+   - 実行時間（ms）
+```
+
 **フェーズ4: SSGによる静的サイト生成**
 
 ```
