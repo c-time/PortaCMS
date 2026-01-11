@@ -366,12 +366,122 @@ node packages/cli/bin/porta.js content-model:create \
 node packages/cli/bin/porta.js content-model:validate
 ```
 
-### 利用可能なコマンド
+### CLIコマンドリファレンス
 
-- `init`: 新しいPortaCMSプロジェクトを初期化
-- `content-model:create`: 新しいコンテンツモデルを作成
-- `content-model:list`: コンテンツモデルの一覧を表示
-- `content-model:validate`: 既存のコンテンツモデルをバリデーション
+#### 設計思想
+
+- 生成されたJSONファイルは**開発者が直接編集する**ことを前提
+- CLIは主に**初期化・生成・検証・ビルド**を担当
+- インタラクティブな編集機能は提供せず、エディタでの直接編集を推奨
+
+#### コマンド一覧
+
+**プロジェクト管理**
+
+| コマンド | 状態 | 目的 |
+|---------|------|------|
+| `init` | ✅ | プロジェクトを初期化（project.json、workspace作成） |
+
+**Workspace管理**
+
+| コマンド | 状態 | 目的 |
+|---------|------|------|
+| `workspace:create` | 📋 | 新しいワークスペースディレクトリとworkspace.jsonを生成 |
+| `workspace:list` | 📋 | 全ワークスペースを一覧表示 |
+
+**ContentModel管理**
+
+| コマンド | 状態 | 目的 |
+|---------|------|------|
+| `content-model:create` | ✅ | コンテンツモデルの雛形（model.json）を生成 |
+| `content-model:list` | ✅ | 全コンテンツモデルを一覧表示 |
+| `content-model:validate` | ✅ | model.jsonのスキーマバリデーション |
+
+> **Note**: 生成されたmodel.jsonは開発者がエディタで直接編集してフィールド定義を追加
+
+**ContentItem（コンテンツ）管理**
+
+| コマンド | 状態 | 目的 |
+|---------|------|------|
+| `content:create` | 📋 | コンテンツアイテムの雛形（{id}.json）を生成 |
+| `content:list` | 📋 | コンテンツアイテムを一覧表示 |
+| `content:validate` | 📋 | コンテンツアイテムのスキーマバリデーション |
+
+> **Note**: 生成されたアイテムJSONは開発者がエディタで直接編集してコンテンツを入力
+
+**Build（ビルド）管理**
+
+| コマンド | 状態 | 目的 |
+|---------|------|------|
+| `build` | 📋 | BuildSpecに基づいてPageContentViewを生成 |
+| `build:clean` | 📋 | 生成されたPageContentViewを削除 |
+
+> **Note**: build-spec.jsonは開発者が直接編集してページ生成ルールを定義
+
+**BuildSpec管理**
+
+| コマンド | 状態 | 目的 |
+|---------|------|------|
+| `build-spec:init` | 📋 | build-spec.jsonの雛形を生成 |
+| `build-spec:validate` | 📋 | build-spec.jsonのバリデーション |
+
+**バリデーション統合**
+
+| コマンド | 状態 | 目的 |
+|---------|------|------|
+| `validate` | 📋 | プロジェクト全体のバリデーション（全JSONファイル） |
+
+**開発・デバッグ**
+
+| コマンド | 状態 | 目的 |
+|---------|------|------|
+| `watch` | 📋 | ファイル変更を監視して自動バリデーション/ビルド |
+| `info` | 📋 | プロジェクト情報を表示（統計、構成） |
+| `doctor` | 📋 | プロジェクトの健全性チェック |
+
+**データ移行**
+
+| コマンド | 状態 | 目的 |
+|---------|------|------|
+| `export` | 📋 | ワークスペース全体をZIP/JSONにエクスポート |
+| `import` | 📋 | エクスポートしたデータをインポート |
+
+#### 開発ワークフロー例
+
+```bash
+# 1. プロジェクト初期化
+porta init -d ./my-cms
+
+# 2. コンテンツモデル作成（雛形生成）
+porta content-model:create -n "ブログ記事" -t list
+
+# 3. エディタでmodel.jsonを開いてフィールド定義を追加
+vim ./my-cms/workspaces/default/contents/blog-posts/model.json
+
+# 4. バリデーション
+porta content-model:validate
+
+# 5. コンテンツアイテム作成（雛形生成）
+porta content:create -m blog-posts
+
+# 6. エディタでコンテンツを入力
+vim ./my-cms/workspaces/default/contents/blog-posts/items/{id}.json
+
+# 7. ビルド
+porta build
+
+# 8. 生成されたPageContentViewをSSGで利用
+```
+
+#### CLIの役割
+
+| 役割 | 担当 |
+|------|------|
+| **初期化・生成** | CLI（`init`, `create`, `build`） |
+| **バリデーション** | CLI（`validate`） |
+| **一覧表示** | CLI（`list`） |
+| **編集** | 開発者（エディタで直接JSONを編集） |
+| **ビルド・変換** | CLI（`build`） |
 
 ## プログラマティックAPI
 
