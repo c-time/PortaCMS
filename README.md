@@ -551,6 +551,72 @@ node packages/cli/bin/porta.js content-model:validate
 --watch-poll <ms>         # ポーリング間隔（デフォルト: 1000ms）
 ```
 
+#### ビルドコマンド使用例
+
+##### 開発時の典型的なワークフロー
+
+```bash
+# 初回ビルド（クリーンビルドで開始）
+porta build --clean
+
+# 開発中は watchモードで自動ビルド
+porta build --watch
+
+# 別のターミナルでコンテンツ編集
+porta content-model:create -n articles --type list
+# ... ContentItem作成 ...
+# → watchモードが自動的に増分ビルド実行
+```
+
+##### 特定のViewやPageのみビルド
+
+```bash
+# 特定のContentListViewのみ再生成
+porta build --model articles --view latest-posts
+
+# 全モデルの特定ビュー名を持つViewを再生成
+porta build --views-only --model articles
+
+# 特定のPageのみ再生成
+porta build --page blog-index
+```
+
+##### 検証とドライラン
+
+```bash
+# BuildSpecの検証のみ（生成はしない）
+porta build --validate
+
+# ビルド計画の確認（実行はしない）
+porta build --dry-run
+
+# ビルド計画を確認してから実行
+porta build --dry-run && porta build
+```
+
+##### 並列ビルドとエラーハンドリング
+
+```bash
+# 8並列でビルド、エラーがあっても全て実行して収集
+porta build --parallel 8 --continue-on-error
+
+# 最初のエラーで即座に停止
+porta build --fail-fast
+
+# 内容が同一ならスキップ（Git差分最小化）
+porta build --skip-if-identical
+```
+
+##### CI/CDでの使用例
+
+```bash
+# CI環境: クリーンビルド + 検証 + Git差分最小化
+porta build --clean --skip-if-identical --fail-fast
+
+# プロダクションビルド: 並列ビルド + 詳細ログ
+porta build --parallel 8 --verbose --fail-fast
+```
+
 ### CLIコマンドリファレンス
 
 #### 設計思想
