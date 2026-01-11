@@ -53,7 +53,7 @@ export interface StorageFiles {
 
   // Content List Views
   contentModelViewsDir: (workspaceSlug: WorkspaceSlug, contentModelSlug: ContentModelSlug) => string;
-  contentModelViewConfigFile: (
+  contentModelViewSlugDir: (
     workspaceSlug: WorkspaceSlug,
     contentModelSlug: ContentModelSlug,
     contentListViewSlug: ContentListViewSlug
