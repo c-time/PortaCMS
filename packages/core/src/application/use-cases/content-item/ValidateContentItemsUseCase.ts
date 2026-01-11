@@ -11,7 +11,7 @@ import {
   ContentItemValidationResult,
 } from '../../driver-ports/content-item/ValidateContentItemsUseCasePort.js';
 import type { ContentItem } from '../../../domain/content-item/entities.js';
-import type { ContentModel, FieldDefinition } from '../../../domain/content-model/entities.js';
+import type { ContentModel } from '../../../domain/content-model/entities.js';
 
 // ========================================
 // Error Definitions
