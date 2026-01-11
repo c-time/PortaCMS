@@ -684,21 +684,29 @@ packages/
 
 ```
 porta-data/
-├── project.json
-├── media/
+├── project.json                        # プロジェクト設定
+├── media/                              # メディアアセット
 └── workspaces/
-    ├── {workspace-slug}/
-    │   ├── workspace.json
-    │   ├── build-spec.json
-    │   ├── contents/
-    │   │   └── {content-model-slug}/
-    │   │       ├── model.json
-    │   │       ├── items/
-    │   │       │   └── {item-id}.json
-    │   │       └── views/
-    │   │           └── {view-slug}/
-    │   └── pages/
-    └── ...
+    └── {workspace-slug}/
+        ├── workspace.json              # ワークスペース設定
+        ├── build-spec.json             # ビルド仕様（Mapper定義）
+        ├── contents/
+        │   └── {content-model-slug}/
+        │       ├── model.json          # ContentModel定義（ContentListViewStructure含む）
+        │       ├── items/              # ContentItem（コンテンツデータ）
+        │       │   └── {item-id}.json
+        │       └── views/              # 生成されたContentListView
+        │           └── {view-slug}/    # ビューごとのディレクトリ
+        │               ├── page-1.json  # paginated型の場合
+        │               ├── page-2.json
+        │               └── data.json    # bounded型の場合
+        └── pages/                      # 生成されたPageContentView（BuildSpec実行結果）
+            ├── index.json              # Static型の例
+            ├── blog/
+            │   ├── page-1.json         # Index型の例
+            │   ├── page-2.json
+            │   └── {slug}.json         # Item型の例
+            └── ...
 ```
 
 ## 開発ワークフロー
