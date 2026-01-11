@@ -203,15 +203,19 @@ Project（ルートエンティティ）
 **Iterator戦略**:
 - **perItem**: アイテムごとに1ページ生成 → Item型PageContentView
   - 用途: ブログ記事詳細、製品詳細ページなど
+  - 要件: iteratorに指定されたContentListViewからアイテムを取得
 - **perPage**: ページネーションごとに1ページ生成 → Index型PageContentView
   - 用途: ブログ一覧（ページ1、2、3...）、製品カタログなど
+  - **重要**: iteratorには**必ずpaginated型のContentListView**を指定
 - **無し**: 反復なし → Static型PageContentView
   - 用途: ホームページ、会社概要など固定ページ
 
 **構成要素**:
 - **Website.Pages[]**: ページ生成ルール
   - **Mapper.input**: 入力データソース
-    - `iterator`: 繰り返し戦略（perItem/perPage）
+    - `iterator`: 繰り返し戦略と対象ビュー
+      - `slug`: ContentListViewSlug（perPageの場合はpaginated型を指定）
+      - `type`: "perItem" | "perPage"
     - `objectContents[]`: 参照するObject型ContentModel（例: サイト設定）
     - `views[]`: 参照するContentListView（例: "latest-posts"）
     - `context`: ページコンテキスト変数（constants、properties）
@@ -224,10 +228,35 @@ Project（ルートエンティティ）
 - **目的**: SSGテンプレートエンジン用のJSON出力
 - **責務**: SSGが使用するための事前処理・最適化されたデータ
 
-**3つの型**:
-1. **Static**: 静的ページ（例: ホームページ、会社概要）
-2. **Index**: 一覧ページ（例: ブログ一覧、製品カタログ）+ ページネーション
-3. **Item**: 詳細ページ（例: ブログ記事、製品詳細）
+**3つの型と使い分け**:
+
+| 型 | iterator | 用途 | 生成 |
+|---|---|---|---|
+| Static | なし | 静的ページ | 1ページ |
+| Index | perPage | 一覧ページ | ページネーションごと |
+| Item | perItem | 詳細ページ | アイテムごと |
+
+**構造の違い**:
+```
+Static型:  pageContext + objectContents + listViews
+Index型:   Static + paginationContext (ページ情報)
+Item型:    Static + fields (個別アイテムフィールド)
+```
+
+**各型の詳細**:
+1. **Static型**: 反復なしの静的ページ
+   - 用途: ホームページ、会社概要、お問い合わせなど
+   - 生成: 1ページのみ
+
+2. **Index型**: ページネーション対応の一覧ページ
+   - 用途: ブログ一覧、製品カタログなど
+   - 生成: ページネーションごとに複数ページ
+   - 追加プロパティ: `paginationContext`（現在ページ、総ページ数、ナビゲーション）
+
+3. **Item型**: アイテムごとの詳細ページ
+   - 用途: ブログ記事詳細、製品詳細ページなど
+   - 生成: ContentItemごとに1ページ
+   - 追加プロパティ: `fields`（個別アイテムのフィールド値）
 
 **共通プロパティ**:
 - `pageContext`: ページメタデータ（title、description、constants、properties）
