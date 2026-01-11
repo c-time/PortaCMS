@@ -475,6 +475,25 @@ node packages/cli/bin/porta.js content-model:create \
 node packages/cli/bin/porta.js content-model:validate
 ```
 
+### ビルドコマンド
+
+`porta build` コマンドは、ContentListViewとPageContentViewを生成します。複数のビルドモードとオプションを提供し、開発フローに合わせた柔軟なビルドが可能です。
+
+#### ビルドモード
+
+| モード | コマンド | 説明 |
+|---|---|---|
+| **フルビルド** | `porta build` | 全ContentListView + 全PageContentViewをビルド |
+| **増分ビルド** | `porta build --incremental` | 変更のあったエンティティと依存先のみビルド |
+| **List Viewのみ** | `porta build --views-only [--model <model-slug>]` | 全ContentListViewのみ生成（--model指定時は特定モデルのみ） |
+| **Page Viewのみ** | `porta build --pages-only` | 全PageContentViewのみ生成 |
+| **特定List View** | `porta build --model <model-slug> --view <view-slug>` | 指定したContentListViewのみビルド |
+| **特定Page** | `porta build --page <page-slug>` | 指定したPageContentViewのみビルド |
+| **クリーンビルド** | `porta build --clean` | 生成ファイルを全削除してフルビルド |
+| **検証のみ** | `porta build --validate` | BuildSpecの妥当性検証のみ（生成なし） |
+| **Watchモード** | `porta build --watch` | ファイル変更監視、増分ビルド自動実行 |
+| **ドライラン** | `porta build --dry-run` | ビルド計画を表示、実行はしない |
+
 ### CLIコマンドリファレンス
 
 #### 設計思想

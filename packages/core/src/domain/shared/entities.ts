@@ -17,12 +17,15 @@ export const ContentModelSlugSchema = SlugSchema.brand('ContentModelSlug');
 
 export const ContentListViewSlugSchema = SlugSchema.brand('ContentListViewSlug');
 
+export const PageSlugSchema = SlugSchema.brand('PageSlug');
+
 export type WorkspaceSlug = z.infer<typeof WorkspaceSlugSchema>;
 export type FieldSlug = z.infer<typeof FieldSlugSchema>;
 export type ContentItemSlug = z.infer<typeof ContentItemSlugSchema>;
 export type CategorySlug = z.infer<typeof CategorySlugSchema>;
 export type ContentModelSlug = z.infer<typeof ContentModelSlugSchema>;
 export type ContentListViewSlug = z.infer<typeof ContentListViewSlugSchema>;
+export type PageSlug = z.infer<typeof PageSlugSchema>;
 
 // Low-level base schemas for field values
 const StringValueSchema = z.string();

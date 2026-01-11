@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { FieldValueSchema, PaginationContextSchema, FieldSlugSchema, ContentListViewSlugSchema, PageContextFieldSchema } from '../shared/entities.js';
+import { FieldValueSchema, PaginationContextSchema, FieldSlugSchema, ContentListViewSlugSchema, PageContextFieldSchema, PageSlugSchema } from '../shared/entities.js';
 
 const FieldsRecordSchema = z.record(FieldSlugSchema, FieldValueSchema).default({});
 const ObjectContentsSchema = z.record(FieldSlugSchema, FieldValueSchema).default({});
@@ -8,14 +8,15 @@ const ConstantsSchema = z.record(FieldSlugSchema, PageContextFieldSchema).defaul
 const ListViewsSchema = z.record(ContentListViewSlugSchema, FieldsRecordSchema).default({});
 
 const DefaultPageContentViewSchema = z.object({
+  slug: PageSlugSchema,
   // page context
   pageContext: z.object({
     title: z.string().default(''),
     description: z.string().default(''),
     // TODO: add pre-defined pageContext fields
 
-    constants: ConstantsSchema, 
-    properties: PropertiesSchema 
+    constants: ConstantsSchema,
+    properties: PropertiesSchema
   }),
   // object contents
   objectContents: ObjectContentsSchema,
