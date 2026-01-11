@@ -128,19 +128,43 @@ Project（ルートエンティティ）
 - **関連型**: RelatedSingleSelect、RelatedMultipleSelect
 
 #### ContentListViewStructure
-- **目的**: SSG用の出力データ「ビュー」を定義（List型のみ）
+- **目的**: SSG用の出力データ「ビュー」の定義（List型のみ）
 - **責務**: 出力データのフィルタリング、ソート、ページネーションルールを定義
+
+**重要**: ContentListViewStructureは「定義」、ContentListViewは「生成物」
+
+```
+┌──────────────────────────┐
+│ ContentListViewStructure │ ← ContentModelに保存される設定
+└──────────┬───────────────┘
+           │ (実行時に適用)
+           ↓
+┌──────────────────────────┐
+│   ContentListView        │ ← 生成されるJSON出力
+└──────────────────────────┘
+```
+
+**2つのタイプ**:
+- **paginated**: ページネーション対応（無限リスト向け、ページごとに分割）
+- **bounded**: 件数制限のみ（limit/offset指定、シンプルな上限設定）
 
 **構成要素**:
 - `slug`: ビュー識別子（例: "latest-posts", "popular-products"）
-- `fields[]`: 出力に含めるフィールドのリスト
-- `sortFields[]`: ソート設定
-- `filterRules[]`: フィルタ条件
+- `fields[]`: 出力に含めるフィールドのリスト（Virtual Fields含む）
+- `sortFields[]`: ソート設定（複数フィールドで優先順位指定可能）
+- `filterRules[]`: フィルタ条件（eq, ne, gt, contains等のオペレーター）
 - `type`: "paginated"（ページネーションあり）または "bounded"（件数制限のみ）
+- `pagination`: paginated型の場合のページネーション設定
+- `limit`, `offset`: bounded型の場合の件数制限
+
+**ファイル保存**:
+- **定義**: `contents/{model}/model.json` の `contentListViewStructure` 配列内
+- **生成**: `contents/{model}/views/{view-slug}/` に出力
 
 **利用例**:
-- "latest-10-posts": 最新10件の記事
-- "featured-products": featured=trueの製品
+- "latest-10-posts": 最新10件の記事（bounded型）
+- "all-posts-paginated": 全記事をページネーション（paginated型）
+- "featured-products": featured=trueの製品（bounded型）
 
 #### ContentItem
 - **目的**: 実際のコンテンツデータ（記事、製品等）
@@ -157,18 +181,46 @@ Project（ルートエンティティ）
 **ファイル**: `porta-data/workspaces/{workspace}/contents/{model-slug}/items/{item-id}.json`
 
 #### BuildSpec
-- **目的**: CMSコンテンツからSSGデータ形式への変換を定義
+- **目的**: CMSコンテンツからSSGデータ形式への変換ルールを定義
 - **責務**: 入力（ContentModel/ContentItem）から出力（PageContentView）へのマッピング仕様
+
+**Mapper構造**:
+
+```
+┌─────────────────────────┐
+│        Mapper           │
+├─────────────────────────┤
+│ ■ input (データソース)  │
+│   ├─ iterator          │ ← 繰り返し戦略
+│   ├─ objectContents    │ ← 単一オブジェクト参照
+│   ├─ views             │ ← リストビュー参照
+│   └─ context           │ ← ページ変数
+│ ■ output (ファイル出力) │
+│   └─ fileName          │ ← JSONata式
+└─────────────────────────┘
+```
+
+**Iterator戦略**:
+- **perItem**: アイテムごとに1ページ生成 → Item型PageContentView
+  - 用途: ブログ記事詳細、製品詳細ページなど
+  - 要件: iteratorに指定されたContentListViewからアイテムを取得
+- **perPage**: ページネーションごとに1ページ生成 → Index型PageContentView
+  - 用途: ブログ一覧（ページ1、2、3...）、製品カタログなど
+  - **重要**: iteratorには**必ずpaginated型のContentListView**を指定
+- **無し**: 反復なし → Static型PageContentView
+  - 用途: ホームページ、会社概要など固定ページ
 
 **構成要素**:
 - **Website.Pages[]**: ページ生成ルール
   - **Mapper.input**: 入力データソース
-    - `iterator`: 繰り返し戦略（アイテムごと、ページごと）
-    - `objectContents[]`: 参照するObject型ContentModel
-    - `views[]`: 参照するContentListView
-    - `context`: ページコンテキスト変数
+    - `iterator`: 繰り返し戦略と対象ビュー
+      - `slug`: ContentListViewSlug（perPageの場合はpaginated型を指定）
+      - `type`: "perItem" | "perPage"
+    - `objectContents[]`: 参照するObject型ContentModel（例: サイト設定）
+    - `views[]`: 参照するContentListView（例: "latest-posts"）
+    - `context`: ページコンテキスト変数（constants、properties）
   - **Mapper.output**: 出力ファイル命名
-    - `fileName`: JSONata式（例: `"/blog/{slug}.json"`）
+    - `fileName`: JSONata式（例: `"/blog/{slug}.json"`, `"/blog/page-{currentPage}.json"`）
 
 **ファイル**: `porta-data/workspaces/{workspace}/build-spec.json`
 
@@ -176,10 +228,35 @@ Project（ルートエンティティ）
 - **目的**: SSGテンプレートエンジン用のJSON出力
 - **責務**: SSGが使用するための事前処理・最適化されたデータ
 
-**3つの型**:
-1. **Static**: 静的ページ（例: ホームページ、会社概要）
-2. **Index**: 一覧ページ（例: ブログ一覧、製品カタログ）+ ページネーション
-3. **Item**: 詳細ページ（例: ブログ記事、製品詳細）
+**3つの型と使い分け**:
+
+| 型 | iterator | 用途 | 生成 |
+|---|---|---|---|
+| Static | なし | 静的ページ | 1ページ |
+| Index | perPage | 一覧ページ | ページネーションごと |
+| Item | perItem | 詳細ページ | アイテムごと |
+
+**構造の違い**:
+```
+Static型:  pageContext + objectContents + listViews
+Index型:   Static + paginationContext (ページ情報)
+Item型:    Static + fields (個別アイテムフィールド)
+```
+
+**各型の詳細**:
+1. **Static型**: 反復なしの静的ページ
+   - 用途: ホームページ、会社概要、お問い合わせなど
+   - 生成: 1ページのみ
+
+2. **Index型**: ページネーション対応の一覧ページ
+   - 用途: ブログ一覧、製品カタログなど
+   - 生成: ページネーションごとに複数ページ
+   - 追加プロパティ: `paginationContext`（現在ページ、総ページ数、ナビゲーション）
+
+3. **Item型**: アイテムごとの詳細ページ
+   - 用途: ブログ記事詳細、製品詳細ページなど
+   - 生成: ContentItemごとに1ページ
+   - 追加プロパティ: `fields`（個別アイテムのフィールド値）
 
 **共通プロパティ**:
 - `pageContext`: ページメタデータ（title、description、constants、properties）
@@ -242,25 +319,104 @@ PortaCMSには3つの登場人物がいます:
    - ステータス（下書き/公開/アーカイブ）を変更
 ```
 
-**フェーズ3: PortaCMSによるビルド処理**
+**フェーズ2.5: ContentListView生成** (実行時)
+
+```
+[PortaCMSの処理]
+  ↓
+1. ContentListViewStructureを読み込み
+   - model.json内のcontentListViewStructure配列を取得
+  ↓
+2. ContentItemsを取得
+   - 対象ContentModelの全アイテムを読み込み
+  ↓
+3. フィルタリング・ソート・ページネーション適用
+   - filterRulesに基づいてアイテムをフィルタ
+   - sortFieldsに基づいてソート
+   - 指定されたfieldsのみ抽出
+   - Virtual Fieldsを評価（JSONata式）
+  ↓
+4. ContentListViewを生成（JSON出力）
+   - paginated型: ページごとに分割して保存
+   - bounded型: limit/offset適用して保存
+   - 保存先: contents/{model}/views/{view-slug}/
+```
+
+**フェーズ3: PageContentView生成** (Buildプロセス)
 
 ```
 [PortaCMSの処理]
   ↓
 1. BuildSpecを読み込み
+   - build-spec.jsonから全Page定義を取得
   ↓
-2. ContentItemとContentListViewStructureを取得
+2. 各Page定義に対してMapperを実行
+   ├─ Mapper.inputを解決（データ取得）
+   │   ├─ iterator指定がある場合: ContentListViewを取得
+   │   ├─ objectContents: Object型ContentModelを取得
+   │   ├─ views: 参照するContentListViewを取得
+   │   └─ context: 定数と計算プロパティを評価
+   ├─ Iterator戦略を適用
+   │   ├─ perItem: アイテムごとにループ → Item型
+   │   ├─ perPage: ページごとにループ → Index型
+   │   └─ 無し: 1回のみ実行 → Static型
+   ├─ PageContentViewを生成
+   │   ├─ Static型: pageContext + objectContents + listViews
+   │   ├─ Index型: Static + paginationContext
+   │   └─ Item型: Static + fields
+   └─ Mapper.outputでファイル名生成（JSONata評価）
+       - 例: "/blog/{slug}.json", "/blog/page-{currentPage}.json"
   ↓
-3. Mapperを実行してデータ変換
-   - フィルタリング、ソート、ページネーション適用
-   - JSONata式を評価して計算フィールドを生成
+3. pages/ディレクトリに出力
   ↓
-4. PageContentViewを生成
-   - Static型: 静的ページ用JSON
-   - Index型: 一覧ページ用JSON + ページネーション情報
-   - Item型: 詳細ページ用JSON
+4. BuildArtifactに生成ファイルパスを記録
+```
+
+**`porta build` コマンド実行時の詳細処理**:
+
+```
+porta build 実行
   ↓
-5. BuildArtifactに生成ファイルパスを記録
+1. BuildSpec読み込み・検証
+   - build-spec.jsonの妥当性チェック（Zod Schema）
+   - 参照されているContentListViewの存在確認
+   - Mapper定義の整合性検証
+  ↓
+2. フェーズ1: ContentListView生成
+   - 各ContentModelのcontentListViewStructure配列を読み込み
+   - ContentItemsを取得（status=published等でフィルタ）
+   - filterRulesに基づいてアイテムをフィルタ
+   - sortFieldsに基づいてソート（複数フィールド対応）
+   - 指定されたfieldsのみ抽出
+   - Virtual Fieldsを評価（JSONata式実行）
+   - paginated型: ページごとに分割 → views/{view-slug}/page-{n}.json
+   - bounded型: limit/offset適用 → views/{view-slug}/data.json
+  ↓
+3. フェーズ2: PageContentView生成
+   - BuildSpec.pages[]を順次処理（並列処理オプション対応）
+   - Mapper.inputからデータ取得:
+     - iterator: ContentListViewを読み込み
+     - objectContents: Object型ContentModelを読み込み
+     - views: 参照するContentListViewを読み込み
+     - context: 定数と計算プロパティを評価（JSONata）
+   - Iterator戦略に応じてループ:
+     - perItem: 各アイテムでPageContentView生成 → Item型
+     - perPage: 各ページでPageContentView生成 → Index型
+     - なし: 1回のみPageContentView生成 → Static型
+   - Mapper.outputでファイル名生成（JSONata評価）
+   - pages/ディレクトリに出力
+   - --skip-if-identical: 既存ファイルと内容比較、同一ならスキップ
+  ↓
+4. BuildArtifact保存
+   - 生成ファイルパス一覧を記録
+   - ソースファイルのタイムスタンプを保存（増分ビルド用）
+   - ビルド成功/失敗情報を記録
+  ↓
+5. 結果サマリー表示
+   - ContentListView: 生成成功/失敗件数
+   - PageContentView: 生成成功/失敗件数
+   - エラー詳細（あれば全て表示）
+   - 実行時間（ms）
 ```
 
 **フェーズ4: SSGによる静的サイト生成**
@@ -364,6 +520,148 @@ node packages/cli/bin/porta.js content-model:create \
 
 # コンテンツモデルのバリデーション
 node packages/cli/bin/porta.js content-model:validate
+```
+
+### ビルドコマンド
+
+`porta build` コマンドは、ContentListViewとPageContentViewを生成します。複数のビルドモードとオプションを提供し、開発フローに合わせた柔軟なビルドが可能です。
+
+#### ビルドモード
+
+| モード | コマンド | 説明 |
+|---|---|---|
+| **フルビルド** | `porta build` | 全ContentListView + 全PageContentViewをビルド |
+| **増分ビルド** | `porta build --incremental` | 変更のあったエンティティと依存先のみビルド |
+| **List Viewのみ** | `porta build --views-only [--model <model-slug>]` | 全ContentListViewのみ生成（--model指定時は特定モデルのみ） |
+| **Page Viewのみ** | `porta build --pages-only` | 全PageContentViewのみ生成 |
+| **特定List View** | `porta build --model <model-slug> --view <view-slug>` | 指定したContentListViewのみビルド |
+| **特定Page** | `porta build --page <page-slug>` | 指定したPageContentViewのみビルド |
+| **クリーンビルド** | `porta build --clean` | 生成ファイルを全削除してフルビルド |
+| **検証のみ** | `porta build --validate` | BuildSpecの妥当性検証のみ（生成なし） |
+| **Watchモード** | `porta build --watch` | ファイル変更監視、増分ビルド自動実行 |
+| **ドライラン** | `porta build --dry-run` | ビルド計画を表示、実行はしない |
+
+#### ビルドモード詳細
+
+##### フルビルドとクリーンビルドの違い
+
+**フルビルド** (`porta build`):
+- 全ContentListViewと全PageContentViewを生成
+- 既存の生成ファイルは上書きするが、削除はしない
+- 古い不要なファイル（BuildSpecから削除したページ等）が残る可能性あり
+- 通常のビルドで使用
+
+**クリーンビルド** (`porta build --clean`):
+- まず `contents/*/views/` と `pages/` を全削除
+- その後フルビルドを実行
+- 不要なファイルが確実に削除される
+- BuildSpecを大きく変更した後や、ファイル構造を整理したい時に使用
+
+**増分ビルド** (`porta build --incremental`):
+- 前回ビルド以降の変更を検知
+- 変更されたエンティティと、その依存先のみ再生成
+- タイムスタンプベースの変更検知
+- 開発時の高速なビルドに最適
+
+#### ビルドオプション
+
+##### 基本オプション
+
+```bash
+-w, --workspace <slug>    # ワークスペース指定（デフォルト: "default"）
+-d, --dir <path>          # データディレクトリパス（デフォルト: "./porta-data"）
+```
+
+##### ビルド制御
+
+```bash
+--force                   # キャッシュを無視して強制再ビルド
+--fail-fast               # 最初のエラーで停止
+--continue-on-error       # エラーがあっても続行（デフォルト）
+--parallel <n>            # 並列ビルドジョブ数（デフォルト: 4）
+--skip-if-identical       # 生成内容が既存ファイルと同一ならスキップ（Git差分最小化）
+```
+
+##### 出力制御
+
+```bash
+-v, --verbose             # 詳細ログ出力
+-q, --quiet               # エラーのみ出力
+--json                    # JSON形式で結果出力
+--progress                # プログレスバー表示（デフォルト: true）
+```
+
+##### Watchモード設定
+
+```bash
+--watch-debounce <ms>     # 変更検知のデバウンス時間（デフォルト: 300ms）
+--watch-poll <ms>         # ポーリング間隔（デフォルト: 1000ms）
+```
+
+#### ビルドコマンド使用例
+
+##### 開発時の典型的なワークフロー
+
+```bash
+# 初回ビルド（クリーンビルドで開始）
+porta build --clean
+
+# 開発中は watchモードで自動ビルド
+porta build --watch
+
+# 別のターミナルでコンテンツ編集
+porta content-model:create -n articles --type list
+# ... ContentItem作成 ...
+# → watchモードが自動的に増分ビルド実行
+```
+
+##### 特定のViewやPageのみビルド
+
+```bash
+# 特定のContentListViewのみ再生成
+porta build --model articles --view latest-posts
+
+# 全モデルの特定ビュー名を持つViewを再生成
+porta build --views-only --model articles
+
+# 特定のPageのみ再生成
+porta build --page blog-index
+```
+
+##### 検証とドライラン
+
+```bash
+# BuildSpecの検証のみ（生成はしない）
+porta build --validate
+
+# ビルド計画の確認（実行はしない）
+porta build --dry-run
+
+# ビルド計画を確認してから実行
+porta build --dry-run && porta build
+```
+
+##### 並列ビルドとエラーハンドリング
+
+```bash
+# 8並列でビルド、エラーがあっても全て実行して収集
+porta build --parallel 8 --continue-on-error
+
+# 最初のエラーで即座に停止
+porta build --fail-fast
+
+# 内容が同一ならスキップ（Git差分最小化）
+porta build --skip-if-identical
+```
+
+##### CI/CDでの使用例
+
+```bash
+# CI環境: クリーンビルド + 検証 + Git差分最小化
+porta build --clean --skip-if-identical --fail-fast
+
+# プロダクションビルド: 並列ビルド + 詳細ログ
+porta build --parallel 8 --verbose --fail-fast
 ```
 
 ### CLIコマンドリファレンス
@@ -575,21 +873,29 @@ packages/
 
 ```
 porta-data/
-├── project.json
-├── media/
+├── project.json                        # プロジェクト設定
+├── media/                              # メディアアセット
 └── workspaces/
-    ├── {workspace-slug}/
-    │   ├── workspace.json
-    │   ├── build-spec.json
-    │   ├── contents/
-    │   │   └── {content-model-slug}/
-    │   │       ├── model.json
-    │   │       ├── items/
-    │   │       │   └── {item-id}.json
-    │   │       └── views/
-    │   │           └── {view-slug}/
-    │   └── pages/
-    └── ...
+    └── {workspace-slug}/
+        ├── workspace.json              # ワークスペース設定
+        ├── build-spec.json             # ビルド仕様（Mapper定義）
+        ├── contents/
+        │   └── {content-model-slug}/
+        │       ├── model.json          # ContentModel定義（ContentListViewStructure含む）
+        │       ├── items/              # ContentItem（コンテンツデータ）
+        │       │   └── {item-id}.json
+        │       └── views/              # 生成されたContentListView
+        │           └── {view-slug}/    # ビューごとのディレクトリ
+        │               ├── page-1.json  # paginated型の場合
+        │               ├── page-2.json
+        │               └── data.json    # bounded型の場合
+        └── pages/                      # 生成されたPageContentView（BuildSpec実行結果）
+            ├── index.json              # Static型の例
+            ├── blog/
+            │   ├── page-1.json         # Index型の例
+            │   ├── page-2.json
+            │   └── {slug}.json         # Item型の例
+            └── ...
 ```
 
 ## 開発ワークフロー
