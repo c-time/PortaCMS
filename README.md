@@ -181,18 +181,42 @@ Project（ルートエンティティ）
 **ファイル**: `porta-data/workspaces/{workspace}/contents/{model-slug}/items/{item-id}.json`
 
 #### BuildSpec
-- **目的**: CMSコンテンツからSSGデータ形式への変換を定義
+- **目的**: CMSコンテンツからSSGデータ形式への変換ルールを定義
 - **責務**: 入力（ContentModel/ContentItem）から出力（PageContentView）へのマッピング仕様
+
+**Mapper構造**:
+
+```
+┌─────────────────────────┐
+│        Mapper           │
+├─────────────────────────┤
+│ ■ input (データソース)  │
+│   ├─ iterator          │ ← 繰り返し戦略
+│   ├─ objectContents    │ ← 単一オブジェクト参照
+│   ├─ views             │ ← リストビュー参照
+│   └─ context           │ ← ページ変数
+│ ■ output (ファイル出力) │
+│   └─ fileName          │ ← JSONata式
+└─────────────────────────┘
+```
+
+**Iterator戦略**:
+- **perItem**: アイテムごとに1ページ生成 → Item型PageContentView
+  - 用途: ブログ記事詳細、製品詳細ページなど
+- **perPage**: ページネーションごとに1ページ生成 → Index型PageContentView
+  - 用途: ブログ一覧（ページ1、2、3...）、製品カタログなど
+- **無し**: 反復なし → Static型PageContentView
+  - 用途: ホームページ、会社概要など固定ページ
 
 **構成要素**:
 - **Website.Pages[]**: ページ生成ルール
   - **Mapper.input**: 入力データソース
-    - `iterator`: 繰り返し戦略（アイテムごと、ページごと）
-    - `objectContents[]`: 参照するObject型ContentModel
-    - `views[]`: 参照するContentListView
-    - `context`: ページコンテキスト変数
+    - `iterator`: 繰り返し戦略（perItem/perPage）
+    - `objectContents[]`: 参照するObject型ContentModel（例: サイト設定）
+    - `views[]`: 参照するContentListView（例: "latest-posts"）
+    - `context`: ページコンテキスト変数（constants、properties）
   - **Mapper.output**: 出力ファイル命名
-    - `fileName`: JSONata式（例: `"/blog/{slug}.json"`）
+    - `fileName`: JSONata式（例: `"/blog/{slug}.json"`, `"/blog/page-{currentPage}.json"`）
 
 **ファイル**: `porta-data/workspaces/{workspace}/build-spec.json`
 
