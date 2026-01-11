@@ -128,19 +128,43 @@ Project（ルートエンティティ）
 - **関連型**: RelatedSingleSelect、RelatedMultipleSelect
 
 #### ContentListViewStructure
-- **目的**: SSG用の出力データ「ビュー」を定義（List型のみ）
+- **目的**: SSG用の出力データ「ビュー」の定義（List型のみ）
 - **責務**: 出力データのフィルタリング、ソート、ページネーションルールを定義
+
+**重要**: ContentListViewStructureは「定義」、ContentListViewは「生成物」
+
+```
+┌──────────────────────────┐
+│ ContentListViewStructure │ ← ContentModelに保存される設定
+└──────────┬───────────────┘
+           │ (実行時に適用)
+           ↓
+┌──────────────────────────┐
+│   ContentListView        │ ← 生成されるJSON出力
+└──────────────────────────┘
+```
+
+**2つのタイプ**:
+- **paginated**: ページネーション対応（無限リスト向け、ページごとに分割）
+- **bounded**: 件数制限のみ（limit/offset指定、シンプルな上限設定）
 
 **構成要素**:
 - `slug`: ビュー識別子（例: "latest-posts", "popular-products"）
-- `fields[]`: 出力に含めるフィールドのリスト
-- `sortFields[]`: ソート設定
-- `filterRules[]`: フィルタ条件
+- `fields[]`: 出力に含めるフィールドのリスト（Virtual Fields含む）
+- `sortFields[]`: ソート設定（複数フィールドで優先順位指定可能）
+- `filterRules[]`: フィルタ条件（eq, ne, gt, contains等のオペレーター）
 - `type`: "paginated"（ページネーションあり）または "bounded"（件数制限のみ）
+- `pagination`: paginated型の場合のページネーション設定
+- `limit`, `offset`: bounded型の場合の件数制限
+
+**ファイル保存**:
+- **定義**: `contents/{model}/model.json` の `contentListViewStructure` 配列内
+- **生成**: `contents/{model}/views/{view-slug}/` に出力
 
 **利用例**:
-- "latest-10-posts": 最新10件の記事
-- "featured-products": featured=trueの製品
+- "latest-10-posts": 最新10件の記事（bounded型）
+- "all-posts-paginated": 全記事をページネーション（paginated型）
+- "featured-products": featured=trueの製品（bounded型）
 
 #### ContentItem
 - **目的**: 実際のコンテンツデータ（記事、製品等）
