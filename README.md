@@ -319,25 +319,57 @@ PortaCMSには3つの登場人物がいます:
    - ステータス（下書き/公開/アーカイブ）を変更
 ```
 
-**フェーズ3: PortaCMSによるビルド処理**
+**フェーズ2.5: ContentListView生成** (実行時)
+
+```
+[PortaCMSの処理]
+  ↓
+1. ContentListViewStructureを読み込み
+   - model.json内のcontentListViewStructure配列を取得
+  ↓
+2. ContentItemsを取得
+   - 対象ContentModelの全アイテムを読み込み
+  ↓
+3. フィルタリング・ソート・ページネーション適用
+   - filterRulesに基づいてアイテムをフィルタ
+   - sortFieldsに基づいてソート
+   - 指定されたfieldsのみ抽出
+   - Virtual Fieldsを評価（JSONata式）
+  ↓
+4. ContentListViewを生成（JSON出力）
+   - paginated型: ページごとに分割して保存
+   - bounded型: limit/offset適用して保存
+   - 保存先: contents/{model}/views/{view-slug}/
+```
+
+**フェーズ3: PageContentView生成** (Buildプロセス)
 
 ```
 [PortaCMSの処理]
   ↓
 1. BuildSpecを読み込み
+   - build-spec.jsonから全Page定義を取得
   ↓
-2. ContentItemとContentListViewStructureを取得
+2. 各Page定義に対してMapperを実行
+   ├─ Mapper.inputを解決（データ取得）
+   │   ├─ iterator指定がある場合: ContentListViewを取得
+   │   ├─ objectContents: Object型ContentModelを取得
+   │   ├─ views: 参照するContentListViewを取得
+   │   └─ context: 定数と計算プロパティを評価
+   ├─ Iterator戦略を適用
+   │   ├─ perItem: アイテムごとにループ → Item型
+   │   ├─ perPage: ページごとにループ → Index型
+   │   └─ 無し: 1回のみ実行 → Static型
+   ├─ PageContentViewを生成
+   │   ├─ Static型: pageContext + objectContents + listViews
+   │   ├─ Index型: Static + paginationContext
+   │   └─ Item型: Static + fields
+   └─ Mapper.outputでファイル名生成（JSONata評価）
+       - 例: "/blog/{slug}.json", "/blog/page-{currentPage}.json"
   ↓
-3. Mapperを実行してデータ変換
-   - フィルタリング、ソート、ページネーション適用
-   - JSONata式を評価して計算フィールドを生成
+3. pages/ディレクトリに出力
   ↓
-4. PageContentViewを生成
-   - Static型: 静的ページ用JSON
-   - Index型: 一覧ページ用JSON + ページネーション情報
-   - Item型: 詳細ページ用JSON
-  ↓
-5. BuildArtifactに生成ファイルパスを記録
+4. BuildArtifactに生成ファイルパスを記録
 ```
 
 **フェーズ4: SSGによる静的サイト生成**
