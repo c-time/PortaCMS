@@ -3,6 +3,7 @@ import { Command, Option } from 'commander';
 import chalk from 'chalk';
 import { initCommand } from './commands/init.js';
 import { createContentModelCommand, validateContentModelsCommand, listContentModelsCommand } from './commands/contentModel.js';
+import { createContentItemCommand, validateContentItemsCommand, listContentItemsCommand } from './commands/contentItem.js';
 
 const program = new Command();
 
@@ -62,6 +63,50 @@ program
     await validateContentModelsCommand(options);
   });
 
+// ========================================
+// Content Item Commands
+// ========================================
+
+// Create content item command
+program
+  .command('content:create')
+  .description('Create a new content item')
+  .requiredOption('-m, --content-model <slug>', 'content model slug')
+  .requiredOption('-n, --name <name>', 'content item name')
+  .option('-s, --slug <slug>', 'custom slug (auto-generated from name if not provided)')
+  .option('-w, --workspace <slug>', 'workspace slug', 'default')
+  .option('-d, --dir <directory>', 'data directory', './porta-data')
+  .option('--no-generate-sample', 'do not generate sample field data')
+  .action(async (options) => {
+    await createContentItemCommand(options);
+  });
+
+// List content items command
+program
+  .command('content:list')
+  .description('List all content items for a content model')
+  .requiredOption('-m, --content-model <slug>', 'content model slug')
+  .option('-w, --workspace <slug>', 'workspace slug', 'default')
+  .option('-d, --dir <directory>', 'data directory', './porta-data')
+  .addOption(
+    new Option('--status <status>', 'filter by status')
+      .choices(['draft', 'published', 'archived'])
+  )
+  .option('--limit <number>', 'limit number of results', '50')
+  .action(async (options) => {
+    await listContentItemsCommand(options);
+  });
+
+// Validate content items command
+program
+  .command('content:validate')
+  .description('Validate content items against content model schema')
+  .requiredOption('-m, --content-model <slug>', 'content model slug')
+  .option('-w, --workspace <slug>', 'workspace slug', 'default')
+  .option('-d, --dir <directory>', 'data directory', './porta-data')
+  .action(async (options) => {
+    await validateContentItemsCommand(options);
+  });
 
 // Example command (keeping for reference)
 program

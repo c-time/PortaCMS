@@ -91,3 +91,18 @@ export type {
   ListContentModelsOutput,
   ContentModelSummary,
 } from '../application/driver-ports/content-model/ListContentModelsUseCasePort.js';
+
+export type {
+  CreateContentItemInput,
+  CreateContentItemOutput,
+} from '../application/driver-ports/content-item/CreateContentItemUseCasePort.js';
+export type {
+  ValidateContentItemsInput,
+  ValidateContentItemsOutput,
+  ContentItemValidationResult,
+} from '../application/driver-ports/content-item/ValidateContentItemsUseCasePort.js';
+export type {
+  ListContentItemsInput,
+  ListContentItemsOutput,
+  ContentItemSummary,
+} from '../application/driver-ports/content-item/ListContentItemsUseCasePort.js';

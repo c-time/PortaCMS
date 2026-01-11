@@ -11,6 +11,7 @@ import type { BuildSpecRepository } from '../../application/driven-ports/BuildSp
 import type { ContentModelRepository } from '../../application/driven-ports/ContentModelRepository.js';
 import type { ContentItemRepository } from '../../application/driven-ports/ContentItemRepository.js';
 import type { JobRepository } from '../../application/driven-ports/JobRepository.js';
+import type { UUIDPort } from '../../application/driven-ports/UUIDPort.js';
 
 /**
  * Factory interface for creating repository instances
@@ -48,4 +49,9 @@ export interface RepositoryFactory {
    * Create a JobRepository instance
    */
   createJobRepository(): JobRepository;
+
+  /**
+   * Create a UUIDPort instance (UUID generator)
+   */
+  createUUIDGenerator(): UUIDPort;
 }

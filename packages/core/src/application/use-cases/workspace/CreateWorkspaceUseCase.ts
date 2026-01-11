@@ -66,8 +66,9 @@ export class CreateWorkspaceUseCase implements CreateWorkspaceUseCasePort {
     // Get current project (or create default if doesn't exist)
     let project = await this.projectRepository.get();
     if (!project) {
-      // Initialize with default project if it doesn't exist
-      project = ProjectSchema.parse({});
+      // Initialize with empty project if it doesn't exist
+      // Don't use default value from schema to avoid pre-populating workspaces
+      project = ProjectSchema.parse({ workspaces: [] });
     }
 
     // Add workspace to project using domain command
