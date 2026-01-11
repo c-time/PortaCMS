@@ -20,6 +20,7 @@ import type { BuildSpecRepository } from '../application/driven-ports/BuildSpecR
 import type { ContentModelRepository } from '../application/driven-ports/ContentModelRepository.js';
 import type { ContentItemRepository } from '../application/driven-ports/ContentItemRepository.js';
 import type { JobRepository } from '../application/driven-ports/JobRepository.js';
+import type { UUIDPort } from '../application/driven-ports/UUIDPort.js';
 
 // ========================================
 // UseCase Imports
@@ -29,6 +30,9 @@ import { CreateWorkspaceUseCase } from '../application/use-cases/workspace/Creat
 import { CreateContentModelUseCase } from '../application/use-cases/content-model/CreateContentModelUseCase.js';
 import { ValidateContentModelsUseCase } from '../application/use-cases/content-model/ValidateContentModelsUseCase.js';
 import { ListContentModelsUseCase } from '../application/use-cases/content-model/ListContentModelsUseCase.js';
+import { CreateContentItemUseCase } from '../application/use-cases/content-item/CreateContentItemUseCase.js';
+import { ListContentItemsUseCase } from '../application/use-cases/content-item/ListContentItemsUseCase.js';
+import { ValidateContentItemsUseCase } from '../application/use-cases/content-item/ValidateContentItemsUseCase.js';
 
 /**
  * DI Container
@@ -79,6 +83,7 @@ export class DIContainer {
   private static contentModelRepository: ContentModelRepository | null = null;
   private static contentItemRepository: ContentItemRepository | null = null;
   private static jobRepository: JobRepository | null = null;
+  private static uuidGenerator: UUIDPort | null = null;
 
   // ========================================
   // Initialization
@@ -164,7 +169,6 @@ export class DIContainer {
   /**
    * Get ContentItemRepository instance (Singleton)
    */
-  // @ts-expect-error - This method will be used when content item use cases are added
   private static getContentItemRepository(): ContentItemRepository {
     this.ensureInitialized();
 
@@ -172,6 +176,18 @@ export class DIContainer {
       this.contentItemRepository = this.config!.repositoryFactory.createContentItemRepository();
     }
     return this.contentItemRepository;
+  }
+
+  /**
+   * Get UUIDPort instance (Singleton)
+   */
+  private static getUUIDGenerator(): UUIDPort {
+    this.ensureInitialized();
+
+    if (!this.uuidGenerator) {
+      this.uuidGenerator = this.config!.repositoryFactory.createUUIDGenerator();
+    }
+    return this.uuidGenerator;
   }
 
   /**
@@ -231,6 +247,40 @@ export class DIContainer {
     );
   }
 
+  /**
+   * Create CreateContentItemUseCase instance
+   */
+  private static createCreateContentItemUseCase(): CreateContentItemUseCase {
+    return new CreateContentItemUseCase(
+      this.getWorkspaceRepository(),
+      this.getContentModelRepository(),
+      this.getContentItemRepository(),
+      this.getUUIDGenerator()
+    );
+  }
+
+  /**
+   * Create ListContentItemsUseCase instance
+   */
+  private static createListContentItemsUseCase(): ListContentItemsUseCase {
+    return new ListContentItemsUseCase(
+      this.getWorkspaceRepository(),
+      this.getContentModelRepository(),
+      this.getContentItemRepository()
+    );
+  }
+
+  /**
+   * Create ValidateContentItemsUseCase instance
+   */
+  private static createValidateContentItemsUseCase(): ValidateContentItemsUseCase {
+    return new ValidateContentItemsUseCase(
+      this.getWorkspaceRepository(),
+      this.getContentModelRepository(),
+      this.getContentItemRepository()
+    );
+  }
+
   // TODO: Add other UseCase factory methods as needed
   // private static createArchiveProjectUseCase(): ArchiveProjectUseCase { ... }
   // private static createListProjectsUseCase(): ListProjectsUseCase { ... }
@@ -267,10 +317,14 @@ export class DIContainer {
         list: this.createListContentModelsUseCase(),
         // TODO: Add other content model use cases
       },
+      contentItem: {
+        create: this.createCreateContentItemUseCase(),
+        list: this.createListContentItemsUseCase(),
+        validate: this.createValidateContentItemsUseCase(),
+      },
       // TODO: Add other domain use case groups
       // project: { ... },
       // website: { ... },
-      // contentItem: { ... },
     });
   }
 
@@ -298,6 +352,7 @@ export class DIContainer {
     this.contentModelRepository = null;
     this.contentItemRepository = null;
     this.jobRepository = null;
+    this.uuidGenerator = null;
   }
 
   /**
@@ -322,6 +377,7 @@ export class DIContainer {
     contentModelRepository?: ContentModelRepository;
     contentItemRepository?: ContentItemRepository;
     jobRepository?: JobRepository;
+    uuidGenerator?: UUIDPort;
   }): void {
     if (overrides.projectRepository) this.projectRepository = overrides.projectRepository;
     if (overrides.workspaceRepository) this.workspaceRepository = overrides.workspaceRepository;
@@ -331,6 +387,7 @@ export class DIContainer {
     if (overrides.contentItemRepository)
       this.contentItemRepository = overrides.contentItemRepository;
     if (overrides.jobRepository) this.jobRepository = overrides.jobRepository;
+    if (overrides.uuidGenerator) this.uuidGenerator = overrides.uuidGenerator;
   }
 }
 
@@ -359,10 +416,14 @@ type ApplicationUseCases = {
     // update: UpdateContentModelUseCase;
     // delete: DeleteContentModelUseCase;
   };
+  contentItem: {
+    create: CreateContentItemUseCase;
+    list: ListContentItemsUseCase;
+    validate: ValidateContentItemsUseCase;
+  };
   // TODO: Add other domain groups
   // project: { ... };
   // website: { ... };
-  // contentItem: { ... };
 };
 
 /**
@@ -373,9 +434,11 @@ type ApplicationUseCases = {
 class Application {
   workspace: ApplicationUseCases['workspace'];
   contentModel: ApplicationUseCases['contentModel'];
+  contentItem: ApplicationUseCases['contentItem'];
 
   constructor(useCases: ApplicationUseCases) {
     this.workspace = useCases.workspace;
     this.contentModel = useCases.contentModel;
+    this.contentItem = useCases.contentItem;
   }
 }
