@@ -319,33 +319,39 @@ PortaCMSには3つの登場人物がいます:
    - ステータス（下書き/公開/アーカイブ）を変更
 ```
 
-**フェーズ2.5: ContentListView生成** (実行時)
+**フェーズ2.5: ContentListView生成** (`porta build` コマンドのフェーズ1)
+
+ContentListViewは `porta build` コマンド実行時に自動生成されます。開発者が手動で作成する必要はありません。
 
 ```
-[PortaCMSの処理]
+[porta build - フェーズ1: ContentListView生成]
   ↓
 1. ContentListViewStructureを読み込み
    - model.json内のcontentListViewStructure配列を取得
   ↓
 2. ContentItemsを取得
    - 対象ContentModelの全アイテムを読み込み
+   - status=publishedでフィルタ（公開済みのみ）
   ↓
 3. フィルタリング・ソート・ページネーション適用
    - filterRulesに基づいてアイテムをフィルタ
    - sortFieldsに基づいてソート
    - 指定されたfieldsのみ抽出
-   - Virtual Fieldsを評価（JSONata式）
+   - Virtual Fieldsを評価（JSONata式実行）
   ↓
 4. ContentListViewを生成（JSON出力）
    - paginated型: ページごとに分割して保存
+     → contents/{model}/views/{view-slug}/page-1.json, page-2.json...
    - bounded型: limit/offset適用して保存
-   - 保存先: contents/{model}/views/{view-slug}/
+     → contents/{model}/views/{view-slug}/data.json
 ```
 
-**フェーズ3: PageContentView生成** (Buildプロセス)
+**フェーズ3: PageContentView生成** (`porta build` コマンドのフェーズ2)
+
+PageContentViewも `porta build` コマンド実行時に自動生成されます。BuildSpecで定義されたMapper設定に基づいて生成されます。
 
 ```
-[PortaCMSの処理]
+[porta build - フェーズ2: PageContentView生成]
   ↓
 1. BuildSpecを読み込み
    - build-spec.jsonから全Page定義を取得
@@ -355,21 +361,26 @@ PortaCMSには3つの登場人物がいます:
    │   ├─ iterator指定がある場合: ContentListViewを取得
    │   ├─ objectContents: Object型ContentModelを取得
    │   ├─ views: 参照するContentListViewを取得
-   │   └─ context: 定数と計算プロパティを評価
+   │   └─ context: 定数と計算プロパティを評価（JSONata）
    ├─ Iterator戦略を適用
-   │   ├─ perItem: アイテムごとにループ → Item型
-   │   ├─ perPage: ページごとにループ → Index型
-   │   └─ 無し: 1回のみ実行 → Static型
+   │   ├─ perItem: アイテムごとにループ → Item型PageContentView
+   │   ├─ perPage: ページごとにループ → Index型PageContentView
+   │   └─ 無し: 1回のみ実行 → Static型PageContentView
    ├─ PageContentViewを生成
    │   ├─ Static型: pageContext + objectContents + listViews
    │   ├─ Index型: Static + paginationContext
    │   └─ Item型: Static + fields
    └─ Mapper.outputでファイル名生成（JSONata評価）
-       - 例: "/blog/{slug}.json", "/blog/page-{currentPage}.json"
+       - 例: "/blog/{slug}.json" (Item型)
+       - 例: "/blog/page-{currentPage}.json" (Index型)
   ↓
 3. pages/ディレクトリに出力
+   - pages/index.json (Static型の例)
+   - pages/blog/article-slug.json (Item型の例)
+   - pages/blog/page-1.json (Index型の例)
   ↓
 4. BuildArtifactに生成ファイルパスを記録
+   - 増分ビルド用のメタデータ保存
 ```
 
 **`porta build` コマンド実行時の詳細処理**:
