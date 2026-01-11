@@ -397,7 +397,7 @@ node packages/cli/bin/porta.js content-model:validate
 | `content-model:list` | ✅ | 全コンテンツモデルを一覧表示 |
 | `content-model:validate` | ✅ | model.jsonのスキーマバリデーション |
 
-> **Note**: 生成されたmodel.jsonは開発者がエディタで直接編集してフィールド定義を追加
+> **Note**: `content-model:create`は実用的なサンプルフィールド、グループ、ContentListViewStructure（List型の場合）を含む雛形を生成します。開発者はこれをベースに、エディタで不要な部分を削除し、必要なフィールドやビューを追加してください。
 
 **ContentItem（コンテンツ）管理**
 
@@ -452,25 +452,28 @@ node packages/cli/bin/porta.js content-model:validate
 # 1. プロジェクト初期化
 porta init -d ./my-cms
 
-# 2. コンテンツモデル作成（雛形生成）
+# 2. コンテンツモデル作成（サンプル付き雛形生成）
 porta content-model:create -n "ブログ記事" -t list
 
-# 3. エディタでmodel.jsonを開いてフィールド定義を追加
+# 3. 生成されたmodel.jsonを確認（サンプルフィールドとビューが含まれる）
+cat ./my-cms/workspaces/default/contents/blog-posts/model.json
+
+# 4. エディタで不要なフィールドを削除、必要なフィールドを追加
 vim ./my-cms/workspaces/default/contents/blog-posts/model.json
 
-# 4. バリデーション
+# 5. バリデーション
 porta content-model:validate
 
-# 5. コンテンツアイテム作成（雛形生成）
+# 6. コンテンツアイテム作成（雛形生成）
 porta content:create -m blog-posts
 
-# 6. エディタでコンテンツを入力
+# 7. エディタでコンテンツを入力
 vim ./my-cms/workspaces/default/contents/blog-posts/items/{id}.json
 
-# 7. ビルド
+# 8. ビルド
 porta build
 
-# 8. 生成されたPageContentViewをSSGで利用
+# 9. 生成されたPageContentViewをSSGで利用
 ```
 
 #### CLIの役割
