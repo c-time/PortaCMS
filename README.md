@@ -494,6 +494,63 @@ node packages/cli/bin/porta.js content-model:validate
 | **Watchモード** | `porta build --watch` | ファイル変更監視、増分ビルド自動実行 |
 | **ドライラン** | `porta build --dry-run` | ビルド計画を表示、実行はしない |
 
+#### ビルドモード詳細
+
+##### フルビルドとクリーンビルドの違い
+
+**フルビルド** (`porta build`):
+- 全ContentListViewと全PageContentViewを生成
+- 既存の生成ファイルは上書きするが、削除はしない
+- 古い不要なファイル（BuildSpecから削除したページ等）が残る可能性あり
+- 通常のビルドで使用
+
+**クリーンビルド** (`porta build --clean`):
+- まず `contents/*/views/` と `pages/` を全削除
+- その後フルビルドを実行
+- 不要なファイルが確実に削除される
+- BuildSpecを大きく変更した後や、ファイル構造を整理したい時に使用
+
+**増分ビルド** (`porta build --incremental`):
+- 前回ビルド以降の変更を検知
+- 変更されたエンティティと、その依存先のみ再生成
+- タイムスタンプベースの変更検知
+- 開発時の高速なビルドに最適
+
+#### ビルドオプション
+
+##### 基本オプション
+
+```bash
+-w, --workspace <slug>    # ワークスペース指定（デフォルト: "default"）
+-d, --dir <path>          # データディレクトリパス（デフォルト: "./porta-data"）
+```
+
+##### ビルド制御
+
+```bash
+--force                   # キャッシュを無視して強制再ビルド
+--fail-fast               # 最初のエラーで停止
+--continue-on-error       # エラーがあっても続行（デフォルト）
+--parallel <n>            # 並列ビルドジョブ数（デフォルト: 4）
+--skip-if-identical       # 生成内容が既存ファイルと同一ならスキップ（Git差分最小化）
+```
+
+##### 出力制御
+
+```bash
+-v, --verbose             # 詳細ログ出力
+-q, --quiet               # エラーのみ出力
+--json                    # JSON形式で結果出力
+--progress                # プログレスバー表示（デフォルト: true）
+```
+
+##### Watchモード設定
+
+```bash
+--watch-debounce <ms>     # 変更検知のデバウンス時間（デフォルト: 300ms）
+--watch-poll <ms>         # ポーリング間隔（デフォルト: 1000ms）
+```
+
 ### CLIコマンドリファレンス
 
 #### 設計思想
