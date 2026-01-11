@@ -319,12 +319,14 @@ PortaCMSには3つの登場人物がいます:
    - ステータス（下書き/公開/アーカイブ）を変更
 ```
 
-**フェーズ2.5: ContentListView生成** (`porta build` コマンドのフェーズ1)
+**フェーズ3: ビルドプロセス** (`porta build` コマンド実行)
 
-ContentListViewは `porta build` コマンド実行時に自動生成されます。開発者が手動で作成する必要はありません。
+ContentListViewとPageContentViewは `porta build` コマンド実行時に自動生成されます。開発者が手動で作成する必要はありません。
+
+**3-1. ContentListView生成**
 
 ```
-[porta build - フェーズ1: ContentListView生成]
+[porta build - サブフェーズ1: ContentListView生成]
   ↓
 1. ContentListViewStructureを読み込み
    - model.json内のcontentListViewStructure配列を取得
@@ -346,12 +348,12 @@ ContentListViewは `porta build` コマンド実行時に自動生成されま�
      → contents/{model}/views/{view-slug}/data.json
 ```
 
-**フェーズ3: PageContentView生成** (`porta build` コマンドのフェーズ2)
+**3-2. PageContentView生成**
 
-PageContentViewも `porta build` コマンド実行時に自動生成されます。BuildSpecで定義されたMapper設定に基づいて生成されます。
+BuildSpecで定義されたMapper設定に基づいてPageContentViewを生成します。
 
 ```
-[porta build - フェーズ2: PageContentView生成]
+[porta build - サブフェーズ2: PageContentView生成]
   ↓
 1. BuildSpecを読み込み
    - build-spec.jsonから全Page定義を取得
@@ -393,7 +395,7 @@ porta build 実行
    - 参照されているContentListViewの存在確認
    - Mapper定義の整合性検証
   ↓
-2. フェーズ1: ContentListView生成
+2. サブフェーズ1: ContentListView生成
    - 各ContentModelのcontentListViewStructure配列を読み込み
    - ContentItemsを取得（status=published等でフィルタ）
    - filterRulesに基づいてアイテムをフィルタ
@@ -403,7 +405,7 @@ porta build 実行
    - paginated型: ページごとに分割 → views/{view-slug}/page-{n}.json
    - bounded型: limit/offset適用 → views/{view-slug}/data.json
   ↓
-3. フェーズ2: PageContentView生成
+3. サブフェーズ2: PageContentView生成
    - BuildSpec.pages[]を順次処理（並列処理オプション対応）
    - Mapper.inputからデータ取得:
      - iterator: ContentListViewを読み込み
